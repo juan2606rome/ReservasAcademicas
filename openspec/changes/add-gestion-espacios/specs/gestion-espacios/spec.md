@@ -2,19 +2,23 @@
 
 ## Purpose
 
-Esta capacidad proporciona la gestión del catálogo de espacios académicos para el sistema de reservas. Permite crear, listar, consultar, editar y desactivar espacios con validaciones adecuadas, garantizando la integridad del catálogo y el control de acceso por rol.
+Esta capacidad proporciona la gestión del catálogo de espacios académicos para el sistema de reservas. Permite crear, listar, consultar, editar, desactivar y reactivar espacios con validaciones adecuadas, garantizando la integridad del catálogo y el control de acceso por rol.
 
 ## ADDED Requirements
 
 ### Requirement: Tipos de espacio
-The system SHALL soportar únicamente tres tipos de espacio: LABORATORIO, AUDITORIO y SALA_COMPUTO.
+El sistema SHALL soportar únicamente tres tipos de espacio: LABORATORIO, AUDITORIO y SALA_COMPUTO.
 
 #### Scenario: Tipos válidos
-- **WHEN** se crea o edita un espacio
-- **THEN** el sistema acepta únicamente LABORATORIO, AUDITORIO o SALA_COMPUTO
+- **WHEN** se crea o edita un espacio con tipo LABORATORIO, AUDITORIO o SALA_COMPUTO
+- **THEN** el sistema acepta la operación
 
-### Requirement: Gestión de espacios solo por administrador
-The system SHALL permitir crear, listar, consultar, editar y desactivar espacios únicamente a usuarios con rol ADMINISTRADOR.
+#### Scenario: Tipo inválido
+- **WHEN** un administrador intenta crear o editar un espacio con un tipo inválido
+- **THEN** el sistema retorna error con código HTTP 422
+
+### Requirement: Gestión de espacios por rol
+El sistema SHALL permitir crear, editar, activar y desactivar espacios únicamente a usuarios con rol ADMINISTRADOR. El sistema SHALL permitir listar y consultar espacios a cualquier usuario autenticado.
 
 #### Scenario: Administrador crea espacio
 - **WHEN** un usuario con rol ADMINISTRADOR crea un espacio
@@ -24,21 +28,45 @@ The system SHALL permitir crear, listar, consultar, editar y desactivar espacios
 - **WHEN** un usuario con rol SOLICITANTE intenta crear un espacio
 - **THEN** el sistema rechaza la operación con código HTTP 403
 
+#### Scenario: Solicitante intenta editar espacio
+- **WHEN** un usuario con rol SOLICITANTE intenta editar un espacio
+- **THEN** el sistema rechaza la operación con código HTTP 403
+
+#### Scenario: Solicitante intenta desactivar espacio
+- **WHEN** un usuario con rol SOLICITANTE intenta desactivar un espacio
+- **THEN** el sistema rechaza la operación con código HTTP 403
+
+#### Scenario: Solicitante intenta activar espacio
+- **WHEN** un usuario con rol SOLICITANTE intenta activar un espacio
+- **THEN** el sistema rechaza la operación con código HTTP 403
+
+#### Scenario: Usuario autenticado lista espacios
+- **WHEN** cualquier usuario autenticado solicita listar espacios
+- **THEN** el sistema permite la operación
+
+#### Scenario: Usuario autenticado consulta espacio
+- **WHEN** cualquier usuario autenticado consulta un espacio específico
+- **THEN** el sistema permite la operación
+
 ### Requirement: Nombre único de espacio
-The system SHALL garantizar que el nombre de cada espacio sea único. Si se intenta crear o editar un espacio con un nombre ya existente, el sistema SHALL retornar error con código HTTP 409.
+El sistema SHALL garantizar que el nombre de cada espacio sea único sin distinguir mayúsculas ni espacios al inicio o al final. Si se intenta crear o editar un espacio con un nombre ya existente según esta regla, el sistema SHALL retornar error con código HTTP 409.
 
 #### Scenario: Creación con nombre duplicado
-- **WHEN** un administrador intenta crear un espacio con un nombre que ya existe
+- **WHEN** un administrador intenta crear un espacio con un nombre que ya existe ignorando mayúsculas y espacios al inicio o al final
 - **THEN** el sistema retorna error con código HTTP 409
 - **AND** no se crea el espacio
 
 #### Scenario: Edición con nombre duplicado
-- **WHEN** un administrador intenta editar un espacio cambiando su nombre por uno ya existente
+- **WHEN** un administrador intenta editar un espacio cambiando su nombre por uno ya existente ignorando mayúsculas y espacios al inicio o al final
 - **THEN** el sistema retorna error con código HTTP 409
 - **AND** no se actualiza el espacio
 
+#### Scenario: Nombre vacío
+- **WHEN** un administrador intenta crear o editar un espacio con nombre vacío o solo espacios
+- **THEN** el sistema retorna error con código HTTP 422
+
 ### Requirement: Validación de capacidad
-The system SHALL validar que la capacidad sea un número entero mayor que 0. Si no cumple esta condición, el sistema SHALL retornar error con código HTTP 422.
+El sistema SHALL validar que la capacidad sea un número entero mayor que 0. Si no cumple esta condición, el sistema SHALL retornar error con código HTTP 422.
 
 #### Scenario: Capacidad inválida
 - **WHEN** un administrador intenta crear o editar un espacio con capacidad 0, negativa o no entera
@@ -48,35 +76,85 @@ The system SHALL validar que la capacidad sea un número entero mayor que 0. Si 
 - **WHEN** un administrador crea o edita un espacio con capacidad entera mayor que 0
 - **THEN** el sistema acepta la operación
 
-### Requirement: Desactivación de espacios
-The system SHALL permitir desactivar espacios en lugar de eliminarlos. Los espacios desactivados SHALL no aparecer en los listados normales ni SHALL aceptar reservas.
+### Requirement: Desactivación y activación de espacios
+El sistema SHALL permitir desactivar espacios en lugar de eliminarlos mediante PATCH /espacios/{id}/desactivar, y SHALL permitir reactivarlos mediante PATCH /espacios/{id}/activar, ambas operaciones únicamente para usuarios con rol ADMINISTRADOR. El sistema SHALL nunca eliminar espacios mediante DELETE.
 
 #### Scenario: Desactivar espacio
 - **WHEN** un administrador desactiva un espacio
 - **THEN** el sistema marca el espacio como inactivo
+- **AND** el sistema retorna código HTTP 200
 - **AND** el espacio no se elimina de la base de datos
 
-#### Scenario: Espacio desactivado no aparece en listado normal
-- **GIVEN** existe un espacio desactivado
-- **WHEN** se solicita el listado normal de espacios
-- **THEN** el espacio desactivado no aparece en el resultado
+#### Scenario: Activar espacio
+- **WHEN** un administrador activa un espacio
+- **THEN** el sistema marca el espacio como activo
+- **AND** el sistema retorna código HTTP 200
+- **AND** el espacio no se elimina de la base de datos
 
-#### Scenario: Espacio desactivado no acepta reservas
-- **GIVEN** existe un espacio desactivado
-- **WHEN** se intenta crear una reserva para ese espacio
-- **THEN** el sistema rechaza la operación (la validación se aplicará en la etapa de reservas, pero el espacio no debe estar disponible)
+#### Scenario: Desactivar espacio con reservas futuras PENDIENTE o APROBADA
+- **GIVEN** existe un espacio con reservas futuras en estado PENDIENTE o APROBADA
+- **WHEN** un administrador desactiva el espacio
+- **THEN** el sistema marca el espacio como inactivo
+- **AND** las reservas futuras PENDIENTE o APROBADA no se modifican
+- **AND** solo se impiden reservas nuevas para ese espacio
+
+### Requirement: Listados y consulta de espacios
+El sistema SHALL mostrar por defecto solo espacios activos en los listados. El administrador SHALL poder usar el parámetro ?incluir_inactivos=true para incluir espacios inactivos en el listado. Al consultar un espacio por id, si el espacio está inactivo, el administrador SHALL recibir código HTTP 200 y el solicitante SHALL recibir código HTTP 404.
+
+#### Scenario: Listar espacios por defecto
+- **WHEN** cualquier usuario autenticado solicita listar espacios sin el parámetro incluir_inactivos
+- **THEN** el sistema retorna únicamente los espacios activos con código HTTP 200
+
+#### Scenario: Listar espacios incluyendo inactivos
+- **WHEN** un administrador solicita listar espacios con ?incluir_inactivos=true
+- **THEN** el sistema retorna todos los espacios incluyendo inactivos con código HTTP 200
+
+#### Scenario: Consultar espacio activo
+- **WHEN** cualquier usuario autenticado consulta un espacio activo por id
+- **THEN** el sistema retorna la información del espacio con código HTTP 200
+
+#### Scenario: Consultar espacio inactivo como administrador
+- **WHEN** un administrador consulta un espacio inactivo por id
+- **THEN** el sistema retorna la información del espacio con código HTTP 200
+
+#### Scenario: Consultar espacio inactivo como solicitante
+- **WHEN** un solicitante consulta un espacio inactivo por id
+- **THEN** el sistema retorna error con código HTTP 404
+
+### Requirement: Espacio inexistente
+El sistema SHALL retornar código HTTP 404 al consultar, editar, activar o desactivar un espacio que no existe.
+
+#### Scenario: Consultar espacio inexistente
+- **WHEN** un usuario autenticado consulta un espacio que no existe
+- **THEN** el sistema retorna error con código HTTP 404
+
+#### Scenario: Editar espacio inexistente
+- **WHEN** un administrador intenta editar un espacio que no existe
+- **THEN** el sistema retorna error con código HTTP 404
+
+#### Scenario: Desactivar espacio inexistente
+- **WHEN** un administrador intenta desactivar un espacio que no existe
+- **THEN** el sistema retorna error con código HTTP 404
+
+#### Scenario: Activar espacio inexistente
+- **WHEN** un administrador intenta activar un espacio que no existe
+- **THEN** el sistema retorna error con código HTTP 404
 
 ### Requirement: Operaciones CRUD de espacios
-The system SHALL permitir al administrador crear, listar, consultar, editar y desactivar espacios.
+El sistema SHALL exponer los endpoints POST /espacios, GET /espacios, GET /espacios/{id}, PUT /espacios/{id}, PATCH /espacios/{id}/desactivar y PATCH /espacios/{id}/activar. El sistema SHALL retornar código HTTP 201 al crear un espacio y código HTTP 200 en las demás operaciones.
+
+#### Scenario: Crear espacio
+- **WHEN** un administrador crea un espacio con datos válidos
+- **THEN** el sistema crea el espacio y retorna código HTTP 201
 
 #### Scenario: Listar espacios
-- **WHEN** un usuario autenticado solicita listar espacios
-- **THEN** el sistema retorna la lista de espacios activos (en listado normal)
+- **WHEN** cualquier usuario autenticado solicita listar espacios
+- **THEN** el sistema retorna la lista con código HTTP 200
 
 #### Scenario: Consultar espacio
-- **WHEN** un usuario autenticado consulta un espacio específico
-- **THEN** el sistema retorna la información del espacio
+- **WHEN** cualquier usuario autenticado consulta un espacio específico
+- **THEN** el sistema retorna la información del espacio con código HTTP 200
 
 #### Scenario: Editar espacio
-- **WHEN** un administrador edita los datos de un espacio
-- **THEN** el sistema actualiza el espacio con los nuevos datos válidos
+- **WHEN** un administrador edita los datos de un espacio con datos válidos
+- **THEN** el sistema actualiza el espacio y retorna código HTTP 200
