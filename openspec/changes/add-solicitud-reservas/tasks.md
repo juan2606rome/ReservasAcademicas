@@ -4,48 +4,74 @@
 - [ ] 1.1 Crear tabla reservas en schema.sql con campos: id, espacio_id, usuario_id, inicio, fin, motivo, estado, creada_en. Verificar estructura.
 - [ ] 1.2 Agregar foreign keys a espacios y usuarios. Verificar restricciones.
 - [ ] 1.3 Agregar restricción CHECK para fin > inicio. Verificar restricción.
-- [ ] 1.4 Agregar índices para consultas de solapamiento. Verificar índices.
+- [ ] 1.4 Agregar índices para consultas de solapamiento por espacio. Verificar índices.
 
 ## 2. Capa de repositorio (reservas)
 - [ ] 2.1 Crear reservas/repository.py con consultas parametrizadas. Verificar uso de parámetros.
-- [ ] 2.2 Implementar búsqueda de reservas ocupadas por espacio y rango de tiempo (PENDIENTE o APROBADA). Verificar consulta correcta.
-- [ ] 2.3 Implementar creación de reserva dentro de transacción. Verificar uso de transacción.
-- [ ] 2.4 Implementar consulta de disponibilidad por fecha. Verificar funcionalidad.
+- [ ] 2.2 Implementar búsqueda de reservas ocupadas por espacio y rango de tiempo (PENDIENTE o APROBADA), comparando solo en el MISMO espacio. Verificar consulta correcta.
+- [ ] 2.3 Implementar creación de reserva dentro de transacción con BEGIN IMMEDIATE. Verificar uso de transacción.
+- [ ] 2.4 Implementar consulta de disponibilidad por fecha (evaluada en hora de Bogotá America/Bogota, UTC-5), retornando franjas ocupadas ordenadas por inicio con inicio, fin y estado, sin datos de usuarios. Verificar funcionalidad.
 
 ## 3. Lógica de validación y políticas
-- [ ] 3.1 Crear reservas/politicas.py con validaciones de fechas. Verificar fin > inicio, mismo día, inicio no en pasado.
-- [ ] 3.2 Implementar detección de solapamientos con intervalos [inicio, fin). Verificar fórmula correcta.
+- [ ] 3.1 Crear reservas/politicas.py con validaciones de fechas. Verificar fin > inicio, mismo día en hora de Bogotá (America/Bogota, UTC-5), inicio no en pasado en hora de Bogotá. Verificar que inicio y fin lleguen con zona horaria (si no, 422). Verificar conversión a UTC para guardado.
+- [ ] 3.2 Implementar detección de solapamientos con intervalos [inicio, fin). Verificar fórmula correcta (a1 < b2 AND b1 < a2), solo mismo espacio, PENDIENTE contra PENDIENTE se solapa.
 - [ ] 3.3 Crear función para verificar disponibilidad. Verificar lógica.
+- [ ] 3.4 Validar motivo obligatorio, no vacío y máximo 500 caracteres. Verificar campos faltantes retornan 422.
+- [ ] 3.5 Asegurar que usuario_id provenga del token (ignorar usuario en cuerpo). Verificar lógica.
 
 ## 4. Capa de servicio (reservas)
 - [ ] 4.1 Crear reservas/service.py con lógica de creación de solicitud. Verificar estado PENDIENTE.
 - [ ] 4.2 Validar existencia de espacio. Verificar retorno 404 si no existe.
 - [ ] 4.3 Validar espacio activo. Verificar retorno 409 si inactivo.
-- [ ] 4.4 Aplicar validaciones de fecha/hora. Verificar retorno 422.
-- [ ] 4.5 Implementar comprobación y creación en transacción con BEGIN IMMEDIATE. Verificar atomicidad.
-- [ ] 4.6 Verificar solapamientos con reservas PENDIENTE o APROBADA. Verificar retorno 409 en solapamiento.
-- [ ] 4.7 Permitir reservas contiguas. Verificar que no hay solapamiento.
-- [ ] 4.8 Implementar consulta de disponibilidad. Verificar retorno de franjas ocupadas.
+- [ ] 4.4 Aplicar validaciones de fecha/hora, zona horaria, motivo y campos faltantes. Verificar retorno 422.
+- [ ] 4.5 Aplicar orden de validaciones: 401, 422, 404, 409.
+- [ ] 4.6 Implementar comprobación y creación en transacción con BEGIN IMMEDIATE. Verificar atomicidad.
+- [ ] 4.7 Verificar solapamientos con reservas PENDIENTE o APROBADA solo en el MISMO espacio. Verificar retorno 409 en solapamiento.
+- [ ] 4.8 Permitir reservas contiguas. Verificar que no hay solapamiento.
+- [ ] 4.9 Implementar consulta de disponibilidad GET /reservas/disponibilidad con validaciones (espacio inexistente 404, fecha inválida/faltante 422), retornando lista vacía 200 si no hay reservas.
+- [ ] 4.10 Implementar consulta de reservas GET /reservas (filtrado por rol: solicitante solo las suyas, administrador todas; filtros opcionales estado y espacio_id; más recientes primero).
+- [ ] 4.11 Implementar consulta de reserva por id GET /reservas/{id} (dueño o administrador; ajena siendo solicitante 403; inexistente 404).
 
 ## 5. Capa de API (reservas)
-- [ ] 5.1 Crear reservas/schemas.py con esquemas de petición y respuesta. Verificar validaciones.
-- [ ] 5.2 Crear reservas/router.py con endpoint para crear solicitud. Verificar ruta.
-- [ ] 5.3 Crear endpoint para consultar disponibilidad. Verificar ruta.
-- [ ] 5.4 Proteger endpoints con autenticación (cualquier usuario autenticado puede crear solicitud). Verificar autorización.
-- [ ] 5.5 Implementar POST /reservas/solicitudes con códigos HTTP correctos. Verificar 201 éxito, 404 no existe, 409 inactivo/solapamiento, 422 validación.
-- [ ] 5.6 Implementar GET /reservas/disponibilidad con parámetros espacio_id y fecha. Verificar funcionalidad.
-- [ ] 5.7 Registrar router en aplicación principal. Verificar endpoints accesibles.
+- [ ] 5.1 Crear reservas/schemas.py con esquemas de petición y respuesta. Verificar validaciones (inicio/fin con zona horaria, motivo, etc.).
+- [ ] 5.2 Crear reservas/router.py con endpoints para crear solicitud, consultar disponibilidad, listar reservas y obtener reserva por id. Verificar rutas.
+- [ ] 5.3 Proteger endpoints con autenticación (cualquier usuario autenticado puede crear solicitud y consultar disponibilidad). Verificar autorización.
+- [ ] 5.4 Implementar POST /reservas/solicitudes retornando 201 con id, espacio_id, usuario_id, inicio, fin, motivo y estado=PENDIENTE en caso exitoso; con códigos HTTP correctos según validaciones.
+- [ ] 5.5 Implementar GET /reservas/disponibilidad con parámetros espacio_id y fecha. Verificar funcionalidad.
+- [ ] 5.6 Implementar GET /reservas con filtros opcionales estado y espacio_id. Verificar filtrado por rol.
+- [ ] 5.7 Implementar GET /reservas/{id}. Verificar permisos (403 si ajena, 404 si inexistente).
+- [ ] 5.8 Registrar router en aplicación principal. Verificar endpoints accesibles.
 
 ## 6. Pruebas
-- [ ] 6.1 Escribir prueba: "Creación exitosa de solicitud" - verificar estado PENDIENTE. Verificar test pasa.
-- [ ] 6.2 Escribir prueba: "Fin menor o igual a inicio" - verificar retorno 422. Verificar test pasa.
-- [ ] 6.3 Escribir prueba: "Reserva en días diferentes" - verificar retorno 422. Verificar test pasa.
-- [ ] 6.4 Escribir prueba: "Inicio en el pasado" - verificar retorno 422. Verificar test pasa.
-- [ ] 6.5 Escribir prueba: "Espacio inexistente" - verificar retorno 404. Verificar test pasa.
-- [ ] 6.6 Escribir prueba: "Espacio inactivo" - verificar retorno 409. Verificar test pasa.
-- [ ] 6.7 Escribir prueba: "Solapamiento detectado" - verificar retorno 409. Verificar test pasa.
-- [ ] 6.8 Escribir prueba: "Reservas contiguas permitidas" - verificar creación exitosa. Verificar test pasa.
-- [ ] 6.9 Escribir prueba: "Reserva RECHAZADA o CANCELADA no ocupa espacio" - verificar permitido. Verificar test pasa.
-- [ ] 6.10 Escribir prueba: "Dos solicitudes simultáneas" - verificar solo una exitosa, otra con 409. Verificar test pasa.
-- [ ] 6.11 Escribir prueba: "Consultar disponibilidad con franjas ocupadas" - verificar retorno correcto. Verificar test pasa.
-- [ ] 6.12 Ejecutar toda la suite de pruebas y verificar que todas pasan. Verificar cobertura de todos los escenarios de la especificación.
+- [ ] 6.1 Prueba: "Creación exitosa de solicitud" - usuario desde token, ignorar usuario en cuerpo, retorna 201 con id, espacio_id, usuario_id, inicio, fin, motivo y estado=PENDIENTE. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.2 Prueba: "Fin menor o igual a inicio" - verificar retorno 422. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.3 Prueba: "Reserva en días diferentes" - evaluar en hora de Bogotá, verificar retorno 422. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.4 Prueba: "Inicio en el pasado" - evaluar en hora de Bogotá, verificar retorno 422. Verificar test pasa.
+- [ ] 6.5 Prueba: "Fechas sin zona horaria" - verificar retorno 422. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.6 Prueba: "Reserva válida de 19:00 a 21:00 hora de Bogotá" - verificar creación exitosa en estado PENDIENTE. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.7 Prueba: "Motivo vacío" - verificar retorno 422. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.8 Prueba: "Motivo excede 500 caracteres" - verificar retorno 422. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.9 Prueba: "Motivo faltante" - verificar retorno 422. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.10 Prueba: "Campos faltantes" - verificar retorno 422. Verificar test pasa.
+- [ ] 6.11 Prueba: "Espacio inexistente" - verificar retorno 404. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.12 Prueba: "Espacio inactivo" - verificar retorno 409. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.13 Prueba: "Solapamiento detectado" - verificar retorno 409, solo mismo espacio. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.14 Prueba: "Reservas contiguas permitidas" - verificar creación exitosa. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.15 Prueba: "Reserva RECHAZADA o CANCELADA no ocupa espacio" - verificar permitido. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.16 Prueba: "Mismo horario en otro espacio es permitido" - verificar creación exitosa en ambos espacios. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.17 Prueba: "Una solicitud PENDIENTE contra otra PENDIENTE se solapa" - verificar retorno 409. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.18 Prueba: "Dos solicitudes simultáneas" - verificar solo una exitosa, otra con 409. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.19 Prueba: "Consultar disponibilidad con franjas ocupadas" - GET /reservas/disponibilidad, ordenadas por inicio, cada una con inicio, fin y estado, sin datos de usuarios. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.20 Prueba: "Sin reservas devuelve lista vacía" - GET /reservas/disponibilidad retorna lista vacía con 200. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.21 Prueba: "Espacio inexistente en consulta de disponibilidad" - verificar retorno 404. Verificar test pasa.
+- [ ] 6.22 Prueba: "Fecha inválida o faltante en consulta de disponibilidad" - verificar retorno 422. Verificar test pasa.
+- [ ] 6.23 Prueba: "Solicitante ve solo sus reservas" - GET /reservas, más recientes primero. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.24 Prueba: "Administrador ve todas las reservas" - GET /reservas. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.25 Prueba: "Filtrar reservas por estado" - GET /reservas?estado=PENDIENTE. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.26 Prueba: "Filtrar reservas por espacio_id" - GET /reservas?espacio_id=.... Usar fechas futuras. Verificar test pasa.
+- [ ] 6.27 Prueba: "Consultar reserva propia por id" - GET /reservas/{id}. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.28 Prueba: "Administrador consulta cualquier reserva por id" - GET /reservas/{id}. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.29 Prueba: "Solicitante consulta reserva ajena" - GET /reservas/{id} retorna 403. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.30 Prueba: "Consultar reserva inexistente" - GET /reservas/{id} retorna 404. Verificar test pasa.
+- [ ] 6.31 Prueba: "Orden de validaciones cuando hay varios errores" - 401, 422, 404, 409. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.32 Ejecutar toda la suite de pruebas y verificar que todas pasan. Verificar cobertura de todos los escenarios de la especificación.
