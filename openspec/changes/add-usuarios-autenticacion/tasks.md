@@ -34,7 +34,7 @@
 ## 6. Capa de API (usuarios)
 - [ ] 6.1 Crear usuarios/schemas.py con esquemas de petición y respuesta. Verificar validaciones y que respuesta no incluye campos sensibles.
 - [ ] 6.2 Crear usuarios/router.py con POST /usuarios/registro. Verificar códigos HTTP: 201 éxito, 409 duplicado, 422 datos inválidos.
-- [ ] 6.3 Crear POST /usuarios/login. Verificar códigos HTTP: 200 éxito, 401 credenciales incorrectas/correo no registrado, 403 cuenta inactiva, 422 datos inválidos.
+- [ ] 6.3 Crear POST /usuarios/login. Verificar códigos HTTP: 200 éxito, 401 credenciales incorrectas/correo no registrado, 403 cuenta inactiva, 422 datos inválidos o correo mal formado.
 - [ ] 6.4 Registrar router en aplicación principal. Verificar endpoints accesibles.
 
 ## 7. Pruebas
@@ -47,4 +47,5 @@
 - [ ] 7.7 Escribir prueba de integración: "Inicio de sesión con contraseña incorrecta" - verificar respuesta 401 con mismo mensaje que correo no registrado. Verificar test pasa.
 - [ ] 7.8 Escribir prueba de integración: "Inicio de sesión con correo no registrado" - verificar respuesta 401 con mismo mensaje que contraseña incorrecta. Verificar test pasa.
 - [ ] 7.9 Escribir prueba de integración: "Inicio de sesión con cuenta inactiva" - verificar respuesta 403. Verificar test pasa.
-- [ ] 7.10 Ejecutar toda la suite de pruebas y verificar que todas pasan. Verificar cobertura de todos los escenarios de la especificación.
+- [ ] 7.10 Escribir prueba de integración: "Inicio de sesión con datos faltantes o con correo mal formado" - verificar respuesta 422. Verificar test pasa.
+- [ ] 7.11 Ejecutar toda la suite de pruebas y verificar que todas pasan. Verificar cobertura de todos los escenarios de la especificación.
