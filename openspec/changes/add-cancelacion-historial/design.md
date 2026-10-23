@@ -8,7 +8,7 @@ Ver proposal.md - Why. Esta es la etapa E6 del plan de ingeniería, que depende 
 
 **Objetivos:**
 - Implementar cancelación con permisos correctos
-- Registrar todo cambio de estado en HistorialReserva
+- Registrar todo cambio de estado en HistorialReserva en la misma transacción que el cambio de estado
 - Permitir consulta de historial con filtros y permisos
 - Asegurar que cancelar libera el horario
 
@@ -17,41 +17,54 @@ Ver proposal.md - Why. Esta es la etapa E6 del plan de ingeniería, que depende 
 
 ## Decisions
 
-### Decisión: Permisos de cancelación
-- **Elección**: Solicitante solo cancela las suyas (PENDIENTE o APROBADA). Administrador cancela cualquiera (PENDIENTE o APROBADA)
+### Decisión: Orden de validaciones en cancelación
+- **Elección**: El orden de validaciones cuando hay varios errores SHALL ser 401, 404, 403, 409
+- **Justificación**: Requerido explícitamente
+- **Alternativas consideradas**: Otro orden - no especificado
+
+### Decisión: Cancelación de reservas
+- **Elección**: El solicitante solo puede cancelar sus propias reservas en estado PENDIENTE o APROBADA. El administrador puede cancelar cualquier reserva en estado PENDIENTE o APROBADA. Cancelar una reserva inexistente retorna 404. Cancelar con éxito retorna 200 y la reserva queda en estado CANCELADA. El comentario o motivo de la cancelación es opcional (máximo 500 caracteres). Las reservas en estado RECHAZADA o CANCELADA no se pueden cancelar (409).
 - **Justificación**: Requerido explícitamente
 - **Alternativas consideradas**: Otros permisos - no especificados
 
-### Decisión: Estados cancelables
-- **Elección**: Solo PENDIENTE o APROBADA se pueden cancelar. RECHAZADA y CANCELADA retornan 409
-- **Justificación**: Requerido explícitamente, CANCELADA ya no es cancelable
-- **Alternativas consideradas**: Permitir recancelar - rechazado
-
 ### Decisión: Historial completo
-- **Elección**: Registrar creación, aprobación, rechazo y cancelación
-- **Justificación**: Requerido explícitamente "incluida la creación"
+- **Elección**: Registrar creación, aprobación, rechazo y cancelación. Al crear la solicitud, estado_anterior es NULL. Comentarios por defecto: "Solicitud creada", "Aprobada" (o el motivo si se dio), el motivo del rechazo, y "Cancelada" (o el motivo si se dio).
+- **Justificación**: Requerido explícitamente
 - **Alternativas consideradas**: Solo cambios posteriores a creación - insuficiente
 
+### Decisión: Transaccionalidad
+- **Elección**: El cambio de estado y su registro en HistorialReserva ocurren en la misma transacción. Si falla el registro en HistorialReserva, el cambio de estado no debe aplicarse.
+- **Justificación**: Requerido explícitamente para garantizar integridad
+- **Alternativas consideradas**: Operaciones separadas - no garantiza atomicidad
+
 ### Decisión: Estructura de historial
-- **Elección**: Tabla HistorialReserva con estado_anterior, estado_nuevo, cambiado_por, cambiado_en, comentario
+- **Elección**: Tabla HistorialReserva con campos id, reserva_id, estado_anterior, estado_nuevo, cambiado_por, cambiado_en, comentario
 - **Justificación**: Coincide con entidad definida en plan (sección 3.3)
 - **Alternativas consideradas**: Estructura diferente - no especificada
 
 ### Decisión: Permisos de consulta de historial
-- **Elección**: Solicitante ve solo lo suyo, administrador ve todo
+- **Elección**: Solicitante ve solo lo suyo. Un solicitante nunca ve historial de reservas ajenas, ni siquiera con filtros (recibe lista vacía con 200). Administrador ve todo.
 - **Justificación**: Requerido explícitamente
 - **Alternativas consideradas**: Todos ven todo - violaría privacidad
 
-### Decisión: Filtros
-- **Elección**: Soportar filtros por espacio, estado y fecha
+### Decisión: Filtros de consulta
+- **Elección**: GET /historial soporta filtros opcionales reserva_id, espacio_id, estado (se compara con estado_nuevo), desde y hasta (fechas AAAA-MM-DD en hora de Bogotá, inclusivas, sobre cambiado_en). Valores inválidos retornan 422. Resultados del más reciente al más antiguo.
 - **Justificación**: Requerido explícitamente
-- **Alternativas consideradas**: Sin filtros - menos útil
+- **Alternativas consideradas**: Sin filtros o con otros filtros - no especificados
+
+### Decisión: Estructura de módulos
+- **Elección**: Crear los módulos cancelacion/ e historial/ con las capas repository, service, router según corresponda
+- **Justificación**: Requerido explícitamente por las tareas
+- **Alternativas consideradas**: Estructura distinta - no especificada
 
 ## Risks / Trade-offs
 
-- **[Permisos] Cancelación no autorizada** → Mitigación: Verificar propiedad para solicitantes, rol para administradores, retornar 403
+- **[Validación] Orden incorrecto** → Mitigación: Implementar validaciones en orden estricto 401, 404, 403, 409
+- **[Transaccionalidad] Historial no registrado o registro falla** → Mitigación: Ejecutar cambio de estado y registro en la misma transacción; revertir si falla el registro
+- **[Permisos] Cancelación no autorizada** → Mitigación: Verificar autenticación primero (401), existencia (404), propiedad/rol (403), estado cancelable (409)
 - **[Estados] Cancelación inválida** → Mitigación: Validar estado, retornar 409
-- **[Trazabilidad] Historial incompleto** → Mitigación: Registrar en todas las transiciones de estado
+- **[Trazabilidad] Historial incompleto** → Mitigación: Registrar en todas las transiciones de estado con comentarios por defecto
 - **[Integridad] Historial huérfano** → Mitigación: Foreign key a reservas
-- **[Privacidad] Acceso a historial ajeno** → Mitigación: Filtrar por usuario para solicitantes
+- **[Privacidad] Acceso a historial ajeno** → Mitigación: Filtrar por usuario para solicitantes, incluso con filtros; retornar lista vacía con 200
+- **[Consulta] Filtros inválidos o zona horaria** → Mitigación: Validar valores de filtros, interpretar fechas en hora de Bogotá, inclusivas, filtrar sobre cambiado_en, ordenar del más reciente al más antiguo
 - **[Disponibilidad] Horario liberado** → Mitigación: Al cancelar, liberar espacio (CANCELADA no ocupa)

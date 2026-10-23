@@ -5,53 +5,67 @@
 - [ ] 1.2 Agregar foreign keys. Verificar restricciones.
 - [ ] 1.3 Agregar índices para consultas. Verificar índices.
 
-## 2. Capa de repositorio (historial)
-- [ ] 2.1 Crear historial/repository.py para registrar entradas de historial. Verificar consultas parametrizadas.
-- [ ] 2.2 Implementar registro de historial con todos los campos. Verificar funcionalidad.
-- [ ] 2.3 Implementar consulta de historial con filtros. Verificar filtros por espacio, estado, fecha.
-- [ ] 2.4 Implementar filtrado por permisos (usuario propio vs todos). Verificar lógica.
+## 2. Módulos y estructura
+- [ ] 2.1 Crear módulos cancelacion/ e historial/ con las capas repository, service, router según corresponda. Verificar estructura.
 
-## 3. Capa de repositorio (cancelacion)
-- [ ] 3.1 Crear cancelacion/repository.py para operaciones de cancelación. Verificar estructura.
-- [ ] 3.2 Implementar actualización de estado a CANCELADA. Verificar actualización.
+## 3. Capa de repositorio (historial)
+- [ ] 3.1 Crear historial/repository.py para registrar entradas de historial. Verificar consultas parametrizadas.
+- [ ] 3.2 Implementar registro de historial con todos los campos (estado_anterior puede ser NULL). Verificar funcionalidad.
+- [ ] 3.3 Implementar consulta de historial con filtros reserva_id, espacio_id, estado (estado_nuevo), desde y hasta (fechas AAAA-MM-DD en hora de Bogotá, inclusivas, sobre cambiado_en). Verificar filtros.
+- [ ] 3.4 Implementar filtrado por permisos (usuario propio vs todos) y garantizar que el solicitante nunca vea historial ajeno. Verificar lógica.
 
-## 4. Capa de servicio
-- [ ] 4.1 Crear cancelacion/service.py con lógica de cancelación. Verificar estructura.
-- [ ] 4.2 Validar permisos: solicitante solo sus reservas, administrador cualquiera. Verificar retorno 403.
-- [ ] 4.3 Validar estado cancelable (PENDIENTE o APROBADA). Verificar retorno 409 para RECHAZADA/CANCELADA.
-- [ ] 4.4 Implementar cancelación en transacción. Verificar atomicidad.
-- [ ] 4.5 Registrar en historial al cancelar. Verificar registro completo.
-- [ ] 4.6 Crear servicio para historial con verificación de permisos. Verificar filtros.
+## 4. Capa de repositorio (cancelacion)
+- [ ] 4.1 Crear cancelacion/repository.py para operaciones de cancelación. Verificar estructura.
+- [ ] 4.2 Implementar actualización de estado a CANCELADA. Verificar actualización.
 
-## 5. Integración con otros módulos
-- [ ] 5.1 Agregar registro de historial al crear solicitud. Verificar registro.
-- [ ] 5.2 Agregar registro de historial al aprobar. Verificar registro.
-- [ ] 5.3 Agregar registro de historial al rechazar. Verificar registro.
-- [ ] 5.4 Verificar que cancelar libera el horario (CANCELADA no ocupa). Verificar lógica.
+## 5. Capa de servicio
+- [ ] 5.1 Crear cancelacion/service.py con lógica de cancelación. Verificar estructura.
+- [ ] 5.2 Aplicar orden de validaciones en cancelación: 401, 404, 403, 409. Verificar orden.
+- [ ] 5.3 Validar permisos: solicitante solo sus reservas, administrador cualquiera. Verificar retorno 403.
+- [ ] 5.4 Validar estado cancelable (PENDIENTE o APROBADA). Verificar retorno 409 para RECHAZADA/CANCELADA. Verificar retorno 404 para reserva inexistente.
+- [ ] 5.5 Implementar cancelación y registro en HistorialReserva en la misma transacción. Si falla el registro, el estado no cambia. Verificar atomicidad.
+- [ ] 5.6 Permitir comentario o motivo opcional en cancelación (máximo 500 caracteres). Usar "Cancelada" o el motivo si se dio. Verificar funcionalidad.
+- [ ] 5.7 Crear servicio para historial con verificación de permisos. Un solicitante con filtros no puede ver historial ajeno (lista vacía con 200). Verificar filtros.
+- [ ] 5.8 Validar valores inválidos en filtros de historial retornando 422. Ordenar resultados del más reciente al más antiguo.
 
-## 6. Capa de API
-- [ ] 6.1 Crear cancelacion/router.py con endpoint para cancelar. Verificar ruta.
-- [ ] 6.2 Crear historial/router.py con endpoint para consultar historial. Verificar ruta.
-- [ ] 6.3 Proteger endpoints con autenticación. Verificar autorización.
-- [ ] 6.4 Implementar POST /reservas/{id}/cancelar con validaciones. Verificar códigos HTTP.
-- [ ] 6.5 Implementar GET /historial con filtros y permisos. Verificar funcionalidad.
-- [ ] 6.6 Registrar routers en aplicación principal. Verificar endpoints accesibles.
+## 6. Integración con otros módulos
+- [ ] 6.1 Agregar registro de historial al crear solicitud. Estado_anterior NULL, estado_nuevo PENDIENTE, comentario "Solicitud creada". Verificar registro y que las funcionalidades de la etapa de creación siguen funcionando (prueba de regresión).
+- [ ] 6.2 Agregar registro de historial al aprobar. Estado_anterior PENDIENTE, estado_nuevo APROBADA, comentario "Aprobada" o el motivo si se dio. Verificar registro y que las funcionalidades de la etapa de aprobación siguen funcionando (prueba de regresión).
+- [ ] 6.3 Agregar registro de historial al rechazar. Estado_anterior PENDIENTE, estado_nuevo RECHAZADA, comentario con el motivo del rechazo. Verificar registro y que las funcionalidades de la etapa de rechazo siguen funcionando (prueba de regresión).
+- [ ] 6.4 Verificar que cancelar libera el horario (CANCELADA no ocupa). Verificar lógica.
 
-## 7. Pruebas
-- [ ] 7.1 Escribir prueba: "Solicitante cancela su reserva PENDIENTE" - verificar CANCELADA y horario liberado. Verificar test pasa.
-- [ ] 7.2 Escribir prueba: "Solicitante cancela su reserva APROBADA" - verificar CANCELADA y horario liberado. Verificar test pasa.
-- [ ] 7.3 Escribir prueba: "Administrador cancela cualquier reserva" - verificar permitido. Verificar test pasa.
-- [ ] 7.4 Escribir prueba: "No se cancela reserva RECHAZADA" - verificar retorno 409. Verificar test pasa.
-- [ ] 7.5 Escribir prueba: "No se cancela reserva ya CANCELADA" - verificar retorno 409. Verificar test pasa.
-- [ ] 7.6 Escribir prueba: "Solicitante intenta cancelar reserva ajena" - verificar retorno 403. Verificar test pasa.
-- [ ] 7.7 Escribir prueba: "Cancelar libera el horario" - verificar disponibilidad. Verificar test pasa.
-- [ ] 7.8 Escribir prueba: "Registro al crear solicitud" - verificar historial. Verificar test pasa.
-- [ ] 7.9 Escribir prueba: "Registro al aprobar" - verificar historial. Verificar test pasa.
-- [ ] 7.10 Escribir prueba: "Registro al rechazar" - verificar historial. Verificar test pasa.
-- [ ] 7.11 Escribir prueba: "Registro al cancelar" - verificar historial. Verificar test pasa.
-- [ ] 7.12 Escribir prueba: "Solicitante consulta su historial" - verificar solo lo suyo. Verificar test pasa.
-- [ ] 7.13 Escribir prueba: "Administrador consulta todo el historial" - verificar sin restricción. Verificar test pasa.
-- [ ] 7.14 Escribir prueba: "Filtrar por espacio" - verificar filtro. Verificar test pasa.
-- [ ] 7.15 Escribir prueba: "Filtrar por estado" - verificar filtro. Verificar test pasa.
-- [ ] 7.16 Escribir prueba: "Filtrar por fecha" - verificar filtro. Verificar test pasa.
-- [ ] 7.17 Ejecutar toda la suite de pruebas y verificar que todas pasan. Verificar cobertura de todos los escenarios de la especificación.
+## 7. Capa de API
+- [ ] 7.1 Crear cancelacion/router.py con endpoint para cancelar. Verificar ruta.
+- [ ] 7.2 Crear historial/router.py con endpoint para consultar historial. Verificar ruta.
+- [ ] 7.3 Proteger endpoints con autenticación. Verificar autorización (401 sin token).
+- [ ] 7.4 Implementar POST /reservas/{id}/cancelar con validaciones en orden 401, 404, 403, 409. Retornar 200 en éxito. Comentario/motivo opcional (máximo 500 caracteres). Verificar códigos HTTP.
+- [ ] 7.5 Implementar GET /historial con filtros opcionales reserva_id, espacio_id, estado (estado_nuevo), desde y hasta (AAAA-MM-DD hora de Bogotá, inclusivas, sobre cambiado_en), permisos correctos, 422 para valores inválidos, orden del más reciente al más antiguo. Verificar funcionalidad.
+- [ ] 7.6 Registrar routers en aplicación principal. Verificar endpoints accesibles.
+
+## 8. Pruebas
+- [ ] 8.1 Escribir prueba: "Orden de validaciones cuando hay varios errores" - verificar orden 401, 404, 403, 409. Verificar test pasa.
+- [ ] 8.2 Escribir prueba: "Cancelar reserva inexistente" - verificar retorno 404. Verificar test pasa.
+- [ ] 8.3 Escribir prueba: "Solicitante cancela su reserva PENDIENTE con éxito" - verificar 200, CANCELADA y horario liberado. Verificar test pasa.
+- [ ] 8.4 Escribir prueba: "Solicitante cancela su reserva APROBADA con éxito" - verificar 200, CANCELADA y horario liberado. Verificar test pasa.
+- [ ] 8.5 Escribir prueba: "Administrador cancela cualquier reserva" - verificar permitido, 200. Verificar test pasa.
+- [ ] 8.6 Escribir prueba: "No se cancela reserva RECHAZADA" - verificar retorno 409. Verificar test pasa.
+- [ ] 8.7 Escribir prueba: "No se cancela reserva ya CANCELADA" - verificar retorno 409. Verificar test pasa.
+- [ ] 8.8 Escribir prueba: "Solicitante intenta cancelar reserva ajena" - verificar retorno 403. Verificar test pasa.
+- [ ] 8.9 Escribir prueba: "Cancelar libera el horario" - verificar disponibilidad. Verificar test pasa.
+- [ ] 8.10 Escribir prueba: "Registro al crear solicitud" - verificar estado_anterior NULL, estado_nuevo PENDIENTE, comentario "Solicitud creada". Verificar test pasa.
+- [ ] 8.11 Escribir prueba: "Registro al aprobar" - verificar historial con comentario "Aprobada" o motivo. Verificar test pasa.
+- [ ] 8.12 Escribir prueba: "Registro al rechazar" - verificar historial con motivo del rechazo. Verificar test pasa.
+- [ ] 8.13 Escribir prueba: "Registro al cancelar" - verificar historial con "Cancelada" o motivo. Verificar test pasa.
+- [ ] 8.14 Escribir prueba: "Cambio de estado y registro en la misma transacción" - verificar que si falla el registro, el estado no cambia. Verificar test pasa.
+- [ ] 8.15 Escribir prueba: "Sin token al consultar historial" - verificar retorno 401. Verificar test pasa.
+- [ ] 8.16 Escribir prueba: "Solicitante consulta su historial" - verificar solo lo suyo, orden del más reciente al más antiguo. Verificar test pasa.
+- [ ] 8.17 Escribir prueba: "Solicitante con filtros no ve historial ajeno" - verificar lista vacía con 200. Verificar test pasa.
+- [ ] 8.18 Escribir prueba: "Administrador consulta todo el historial" - verificar sin restricción. Verificar test pasa.
+- [ ] 8.19 Escribir prueba: "Filtrar por reserva_id" - verificar filtro. Verificar test pasa.
+- [ ] 8.20 Escribir prueba: "Filtrar por espacio_id" - verificar filtro. Verificar test pasa.
+- [ ] 8.21 Escribir prueba: "Filtrar por estado" - verificar filtro comparado con estado_nuevo. Verificar test pasa.
+- [ ] 8.22 Escribir prueba: "Filtrar por rango de fechas en hora de Bogotá" - verificar inclusivas sobre cambiado_en. Verificar test pasa.
+- [ ] 8.23 Escribir prueba: "Valores inválidos en filtros" - verificar retorno 422. Verificar test pasa.
+- [ ] 8.24 Escribir prueba: "Regresión: creación de solicitud sigue funcionando" - verificar que la funcionalidad de la etapa anterior no se rompe. Verificar test pasa.
+- [ ] 8.25 Escribir prueba: "Regresión: aprobación/rechazo siguen funcionando" - verificar que las funcionalidades de las etapas anteriores no se rompen. Verificar test pasa.
+- [ ] 8.26 Ejecutar toda la suite de pruebas y verificar que todas pasan. Verificar cobertura de todos los escenarios de la especificación.
