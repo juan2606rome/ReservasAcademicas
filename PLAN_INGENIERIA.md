@@ -2,10 +2,10 @@
 
 | Campo | Valor |
 |---|---|
-| Autor | JUAN SANDON |
+| Autor | Juan Sandón |
 | Curso / Actividad | Ingeniería de Software aplicada con SDD y OpenSpec |
-| Fecha | 21 de octubre de 2026 |
-| Versión | 1.0 (plan inicial, anterior a cualquier especificación o código) |
+| Fecha | 23 de octubre de 2026 |
+| Versión | 1.1 (plan inicial; corrección de fecha y cronograma, ver sección 8; el contenido técnico no cambió) |
 
 > Este documento se redactó **antes** de instalar OpenSpec, de generar especificaciones y de escribir código. Es la base de la que se derivarán las especificaciones formales. Los cambios posteriores a este plan se registrarán en el `INFORME_FINAL.md`, no se reescribirá la historia de este documento.
 
@@ -169,13 +169,11 @@ Cliente (Swagger UI / Postman / futura app)
 | Componente | Elección | Rol |
 |---|---|---|
 | Lenguaje | Python 3.12 | Lenguaje del sistema |
-| Framework web | FastAPI | API REST, validación y documentación automática (OpenAPI/Swagger) |
-| Validación de datos | Pydantic v2 | Esquemas de entrada/salida |
+| Framework web | FastAPI | API REST con validación de datos incluida y documentación automática (Swagger) |
 | Acceso a datos | `sqlite3` (módulo estándar de Python), SQL escrito a mano | Consultas parametrizadas y transacciones explícitas |
 | Base de datos | SQLite (archivo local) | Persistencia sin instalar ningún servidor |
 | Autenticación | JWT + hash de contraseñas con bcrypt | Sesiones sin estado y contraseñas protegidas |
-| Pruebas | pytest, httpx (TestClient), pytest-cov | Pruebas unitarias, de integración y cobertura |
-| Calidad de código | ruff | Linter y formato |
+| Pruebas | pytest | Pruebas automatizadas unitarias, de integración y de aceptación |
 | Control de versiones | Git + GitHub | Historial verificable de la secuencia plan → specs → código |
 | SDD | OpenSpec | Especificaciones, propuestas, tareas y archivo de cambios |
 | Agente de IA | OpenCode | Implementación asistida según las especificaciones |
@@ -304,10 +302,9 @@ La seguridad va primero porque todas las funciones posteriores dependen de saber
 | De seguridad / permisos | Acceso permitido y denegado por rol; endpoints sin token | pytest |
 | De concurrencia | Dos solicitudes simultáneas por el mismo horario: solo una prospera | pytest + hilos |
 | De regresión | Reejecutar toda la suite tras cada cambio (en especial tras el cambio de regla) | pytest |
-| Análisis estático | Estilo y errores comunes | ruff |
 | Exploratoria manual | Recorrido de flujos completos desde Swagger UI | Navegador |
 
-Objetivo de cobertura: **≥ 80 %** en servicios y reglas de negocio (se mide con pytest-cov; es un indicador, no la meta única).
+Objetivo: que **cada escenario de las especificaciones tenga al menos una prueba automatizada** y que todas pasen.
 
 ### 5.2 Riesgos identificados y mitigación
 
@@ -396,10 +393,9 @@ Para cada tarea implementada por el agente:
 
 | Fecha | Trabajo |
 |---|---|
-| 21 oct | Plan de ingeniería (commit independiente), repositorio, instalación y `openspec init` |
-| 22 oct | Especificaciones de todos los módulos, revisión (Fase 2), E1–E3 |
-| 23 oct | E4–E6, cambio de regla (E7), verificación y cierre (E8): README e INFORME_FINAL |
-| 24 oct (antes de las 7:30) | Entrega final del repositorio |
+| 23 oct (tarde) | Plan de ingeniería (commit independiente), repositorio, instalación y `openspec init`; especificaciones de todos los módulos y su revisión (Fases 1 y 2) |
+| 23 oct (noche) | Implementación E1–E6, cambio de regla (E7), verificación y cierre (E8): README e INFORME_FINAL |
+| 24 oct (antes de las 7:30) | Entrega del repositorio. La actividad permite varios envíos: se entrega la versión más avanzada disponible y se actualiza si queda tiempo |
 
 ---
 
@@ -407,6 +403,7 @@ Para cada tarea implementada por el agente:
 
 | Versión | Fecha | Cambio | Motivo |
 |---|---|---|---|
-| 1.0 | 21 oct 2026 | Versión inicial | Etapa 1 de la actividad |
+| 1.0 | 21 oct 2026 (fecha mal indicada) | Versión inicial | Etapa 1 de la actividad |
+| 1.1 | 23 oct 2026 | Corrección de la fecha del documento y del cronograma | Error al calcular las fechas al redactar la v1.0; el contenido técnico no cambió |
 
 *(Las decisiones que cambien durante el desarrollo se documentarán en `INFORME_FINAL.md`.)*
