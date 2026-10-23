@@ -2,50 +2,56 @@
 
 ## Purpose
 
-This capability provides user registration and authentication for the academic spaces reservation system. It ensures secure account creation with unique emails, password hashing, JWT-based authentication, and proper access control for inactive accounts.
+Esta capacidad proporciona el registro y la autenticación de usuarios para el sistema de gestión de reservas de espacios académicos. Garantiza la creación segura de cuentas con correos únicos, almacenamiento de contraseñas con hash, autenticación basada en JWT y control de acceso para cuentas inactivas.
 
 ## ADDED Requirements
 
-### Requirement: User registration with name, unique email and password
-The system SHALL allow users to register by providing name, email, and password. The email SHALL be unique across all users.
+### Requirement: Registro de usuarios con nombre, correo único y contraseña
+The system SHALL permitir el registro de usuarios proporcionando nombre, correo y contraseña. El correo SHALL ser único a nivel global, guardado en minúsculas y la unicidad no SHALL distinguir mayúsculas y minúsculas. Todo usuario nuevo SHALL crearse con rol SOLICITANTE y activo=true. Si la petición trae un rol, este SHALL ser ignorado. La respuesta SHALL nunca incluir la contraseña ni el hash de la contraseña.
 
-#### Scenario: Successful user registration
-- **WHEN** a user provides valid name, unique email, and password for registration
-- **THEN** the system creates the user account with hashed password
-- **AND** the system returns success confirmation
+#### Scenario: Registro exitoso
+- **WHEN** un usuario proporciona nombre no vacío, correo con formato válido y contraseña entre 8 y 72 caracteres
+- **THEN** el sistema crea la cuenta con rol SOLICITANTE, activo=true, correo en minúsculas y contraseña almacenada con hash
+- **AND** el sistema retorna confirmación exitosa sin incluir contraseña ni hash
 
-#### Scenario: Registration with duplicate email
-- **WHEN** a user attempts to register with an email that already exists
-- **THEN** the system returns an error indicating the email is already in use
+#### Scenario: Registro con correo duplicado
+- **WHEN** un usuario intenta registrarse con un correo que ya existe (sin distinguir mayúsculas/minúsculas)
+- **THEN** el sistema retorna error con código HTTP 409
+- **AND** no se crea una cuenta duplicada
 
-### Requirement: User login returns JWT token
-The system SHALL authenticate users with valid credentials and return a JWT token upon successful login.
+#### Scenario: Registro con datos inválidos
+- **WHEN** un usuario proporciona correo con formato inválido, o contraseña menor a 8 caracteres o mayor a 72 caracteres, o nombre vacío
+- **THEN** el sistema retorna error con código HTTP 422
 
-#### Scenario: Successful login
-- **WHEN** a user provides valid credentials for an active account
-- **THEN** the system validates the password against the stored hash
-- **AND** the system returns a JWT token
+#### Scenario: Registro ignora rol enviado
+- **WHEN** un usuario envía un rol en la petición de registro
+- **THEN** el sistema ignora ese rol y crea la cuenta con rol SOLICITANTE
 
-### Requirement: Passwords stored with hash
-The system SHALL store user passwords using secure password hashing. Passwords SHALL never be stored in plain text.
+### Requirement: Inicio de sesión con credenciales válidas
+The system SHALL autenticar a usuarios con credenciales válidas y, si la cuenta está activa, SHALL retornar un token JWT. El token JWT SHALL contener id del usuario, rol y fecha de expiración (60 minutos). JWT_SECRET SHALL obtenerse de una variable de entorno, no del código.
 
-#### Scenario: Password hashing on registration
-- **WHEN** a user registers with a password
-- **THEN** the system hashes the password before storing it in the database
-- **AND** the plain text password is not stored
+#### Scenario: Inicio de sesión exitoso
+- **WHEN** un usuario proporciona credenciales válidas para una cuenta activa
+- **THEN** el sistema valida la contraseña contra el hash almacenado
+- **AND** el sistema retorna un token JWT con id, rol y expiración de 60 minutos
 
-### Requirement: Inactive user cannot log in
-The system SHALL prevent inactive users from authenticating.
+#### Scenario: Inicio de sesión con contraseña incorrecta
+- **WHEN** un usuario proporciona un correo registrado pero contraseña incorrecta
+- **THEN** el sistema retorna error con código HTTP 401 con el mismo mensaje que cuando el correo no está registrado
 
-#### Scenario: Inactive user login attempt
-- **WHEN** a user with inactive status attempts to log in with valid credentials
-- **THEN** the system rejects the login attempt
-- **AND** the system returns an error indicating the account is inactive
+#### Scenario: Inicio de sesión con correo no registrado
+- **WHEN** un usuario intenta iniciar sesión con un correo no registrado
+- **THEN** el sistema retorna error con código HTTP 401 con el mismo mensaje que cuando la contraseña es incorrecta
 
-### Requirement: Duplicate email returns error
-The system SHALL reject registration attempts when the email is already registered.
+#### Scenario: Inicio de sesión con cuenta inactiva
+- **WHEN** un usuario con cuenta inactiva proporciona credenciales válidas
+- **THEN** el sistema rechaza el inicio de sesión
+- **AND** el sistema retorna error con código HTTP 403
 
-#### Scenario: Duplicate email error on registration
-- **WHEN** a registration request contains an email that already exists in the system
-- **THEN** the system returns an error response
-- **AND** no duplicate user account is created
+### Requirement: Almacenamiento seguro de contraseñas
+The system SHALL almacenar las contraseñas de usuarios usando hash seguro. Las contraseñas SHALL nunca almacenarse en texto plano.
+
+#### Scenario: Hash de contraseña en el registro
+- **WHEN** un usuario se registra con una contraseña
+- **THEN** el sistema genera el hash de la contraseña antes de almacenarla en la base de datos
+- **AND** la contraseña en texto plano no se almacena
