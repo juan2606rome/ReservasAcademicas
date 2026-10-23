@@ -7,11 +7,17 @@ Esta capacidad proporciona la aprobación y rechazo de solicitudes de reserva po
 ## ADDED Requirements
 
 ### Requirement: Solo administrador puede aprobar o rechazar
-The system SHALL permitir aprobar o rechazar reservas únicamente a usuarios con rol ADMINISTRADOR. Si un solicitante intenta realizar estas acciones, SHALL retornar error con código HTTP 403.
+El sistema SHALL permitir aprobar o rechazar reservas únicamente a usuarios con rol ADMINISTRADOR. Si un solicitante intenta realizar estas acciones, el sistema SHALL retornar error con código HTTP 403.
 
 #### Scenario: Administrador aprueba reserva
 - **WHEN** un usuario con rol ADMINISTRADOR aprueba una reserva en estado PENDIENTE
-- **THEN** el sistema permite la operación
+- **THEN** el sistema responde 200
+- **AND** la reserva queda en estado APROBADA
+
+#### Scenario: Administrador rechaza reserva
+- **WHEN** un usuario con rol ADMINISTRADOR rechaza una reserva en estado PENDIENTE
+- **THEN** el sistema responde 200
+- **AND** la reserva queda en estado RECHAZADA
 
 #### Scenario: Solicitante intenta aprobar
 - **WHEN** un usuario con rol SOLICITANTE intenta aprobar una reserva
@@ -22,7 +28,7 @@ The system SHALL permitir aprobar o rechazar reservas únicamente a usuarios con
 - **THEN** el sistema retorna error con código HTTP 403
 
 ### Requirement: Solo se puede actuar sobre reservas en estado PENDIENTE
-The system SHALL permitir aprobar o rechazar únicamente reservas en estado PENDIENTE. Si la reserva está en otro estado, SHALL retornar error con código HTTP 409.
+El sistema SHALL permitir aprobar o rechazar únicamente reservas en estado PENDIENTE. Si la reserva está en otro estado, el sistema SHALL retornar error con código HTTP 409.
 
 #### Scenario: Aprobar reserva ya aprobada
 - **GIVEN** existe una reserva en estado APROBADA
@@ -40,43 +46,58 @@ The system SHALL permitir aprobar o rechazar únicamente reservas en estado PEND
 - **THEN** el sistema retorna error con código HTTP 409
 
 ### Requirement: Rechazo exige motivo
-The system SHALL exigir un motivo para rechazar una reserva. Si no se proporciona motivo, SHALL retornar error con código HTTP 422.
+El sistema SHALL exigir un motivo para rechazar una reserva. El motivo es obligatorio al rechazar: no vacío ni solo espacios, máximo 500 caracteres. Si no se proporciona motivo o es inválido, el sistema SHALL retornar error con código HTTP 422. El motivo es opcional al aprobar y puede ser nulo.
 
 #### Scenario: Rechazo sin motivo
 - **WHEN** un administrador intenta rechazar una reserva sin proporcionar motivo
 - **THEN** el sistema retorna error con código HTTP 422
 
-#### Scenario: Rechazo con motivo
-- **WHEN** un administrador rechaza una reserva proporcionando un motivo
-- **THEN** el sistema acepta la operación
+#### Scenario: Rechazo con motivo vacío o solo espacios
+- **WHEN** un administrador intenta rechazar una reserva con motivo vacío o solo espacios
+- **THEN** el sistema retorna error con código HTTP 422
+
+#### Scenario: Rechazo con motivo excesivo
+- **WHEN** un administrador intenta rechazar una reserva con un motivo de más de 500 caracteres
+- **THEN** el sistema retorna error con código HTTP 422
+
+#### Scenario: Rechazo con motivo válido
+- **WHEN** un administrador rechaza una reserva proporcionando un motivo válido
+- **THEN** el sistema responde 200
+- **AND** la reserva queda en estado RECHAZADA
+
+#### Scenario: Aprobar sin motivo
+- **WHEN** un administrador aprueba una reserva sin proporcionar motivo
+- **THEN** el sistema responde 200
+- **AND** la reserva queda en estado APROBADA
 
 ### Requirement: Trazabilidad de la decisión
-The system SHALL registrar quién decidió, cuándo y el motivo de la decisión para toda acción de aprobación o rechazo.
+El sistema SHALL registrar quién decidió, cuándo y el motivo de la decisión para toda acción de aprobación o rechazo. Las columnas decidido_por, decidido_en y motivo_decision se agregan a schema.sql en esta etapa.
 
 #### Scenario: Registro de aprobación
 - **WHEN** un administrador aprueba una reserva
-- **THEN** el sistema registra decidido_por (id del administrador), decidido_en (timestamp) y motivo_decision
+- **THEN** el sistema registra decidido_por (id del administrador), decidido_en (timestamp) y motivo_decision puede ser nulo
 
 #### Scenario: Registro de rechazo
 - **WHEN** un administrador rechaza una reserva
-- **THEN** el sistema registra decidido_por (id del administrador), decidido_en (timestamp) y el motivo proporcionado
+- **THEN** el sistema registra decidido_por (id del administrador), decidido_en (timestamp) y el motivo proporcionado (no vacío)
 
 ### Requirement: Revalidación al aprobar
-The system SHALL volver a validar la disponibilidad al aprobar una reserva para evitar conflictos que puedan haberse generado.
+El sistema SHALL volver a validar la disponibilidad al aprobar una reserva para evitar conflictos que puedan haberse generado. La revalidación EXCLUYE la propia reserva (de lo contrario siempre chocaría consigo misma). Por la decisión D6 del plan (PENDIENTE ocupa el espacio), un conflicto al aprobar solo puede darse por una inconsistencia de datos: es una validación defensiva. La prueba de este escenario inserta directamente en la base de datos una reserva solapada.
 
 #### Scenario: Aprobar sin conflictos
 - **GIVEN** una reserva en estado PENDIENTE sin conflictos con otras reservas activas
 - **WHEN** un administrador la aprueba
-- **THEN** el sistema la aprueba exitosamente
+- **THEN** el sistema responde 200
+- **AND** la reserva queda en estado APROBADA
 
 #### Scenario: Aprobar con conflicto
-- **GIVEN** una reserva en estado PENDIENTE que ahora solapa con otra reserva APROBADA
+- **GIVEN** una reserva en estado PENDIENTE que ahora solapa con otra reserva APROBADA insertada directamente en la base de datos
 - **WHEN** un administrador intenta aprobarla
-- **THEN** el sistema rechaza la aprobación por conflicto de disponibilidad
-- **AND** la reserva permanece en estado PENDIENTE o se maneja según la lógica definida
+- **THEN** el sistema retorna error con código HTTP 409
+- **AND** la reserva permanece en estado PENDIENTE sin cambios
 
 ### Requirement: Reserva inexistente
-The system SHALL retornar error con código HTTP 404 si la reserva no existe.
+El sistema SHALL retornar error con código HTTP 404 si la reserva no existe.
 
 #### Scenario: Aprobar reserva inexistente
 - **WHEN** un administrador intenta aprobar una reserva con id inexistente
@@ -85,3 +106,33 @@ The system SHALL retornar error con código HTTP 404 si la reserva no existe.
 #### Scenario: Rechazar reserva inexistente
 - **WHEN** un administrador intenta rechazar una reserva con id inexistente
 - **THEN** el sistema retorna error con código HTTP 404
+
+### Requirement: No se puede aprobar una reserva cuyo inicio ya pasó
+El sistema SHALL retornar error con código HTTP 409 si se intenta aprobar una reserva cuyo inicio ya pasó.
+
+#### Scenario: Aprobar reserva con inicio ya pasado
+- **GIVEN** una reserva en estado PENDIENTE cuyo inicio ya pasó
+- **WHEN** un administrador intenta aprobarla
+- **THEN** el sistema retorna error con código HTTP 409
+- **AND** la reserva permanece en estado PENDIENTE sin cambios
+
+### Requirement: Orden de validaciones
+El sistema SHALL aplicar las validaciones en el siguiente orden: 401, 403, 404, 422, 409.
+
+#### Scenario: Orden de validaciones cuando hay varios errores
+- **GIVEN** una petición con múltiples errores potenciales
+- **WHEN** se evalúan las validaciones
+- **THEN** el sistema retorna el primer error según el orden 401, 403, 404, 422, 409
+
+### Requirement: Endpoints y transacción
+El sistema SHALL exponer los endpoints POST /reservas/{id}/aprobar y POST /reservas/{id}/rechazar (con motivo en el cuerpo). La validación y el cambio de estado ocurren en la misma transacción con BEGIN IMMEDIATE.
+
+#### Scenario: Aprobar mediante endpoint
+- **WHEN** un administrador envía POST /reservas/{id}/aprobar sin motivo o con motivo nulo
+- **THEN** el sistema responde 200
+- **AND** la reserva queda en estado APROBADA
+
+#### Scenario: Rechazar mediante endpoint
+- **WHEN** un administrador envía POST /reservas/{id}/rechazar con motivo en el cuerpo
+- **THEN** el sistema responde 200
+- **AND** la reserva queda en estado RECHAZADA
