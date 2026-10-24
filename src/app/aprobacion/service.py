@@ -3,6 +3,7 @@ from typing import Optional
 from src.app.nucleo.conexion import get_connection
 from src.app.aprobacion import repository as aprobacion_repo
 from src.app.reservas import repository as reservas_repo
+from src.app.historial import repository as hist_repo
 
 
 class AprobacionError(Exception):
@@ -86,6 +87,12 @@ def aprobar_reserva(usuario: dict, reserva_id: int, motivo: Optional[str] = None
             if motivo_decision == "":
                 motivo_decision = None
         resultado = aprobacion_repo.aprobar_reserva(reserva_id, usuario.get("id"), motivo_decision, conn=conn)
+        try:
+            comentario_hist = "Aprobada" if motivo_decision is None or (isinstance(motivo_decision, str) and motivo_decision.strip() == "") else str(motivo_decision)
+            hist_repo.registrar_historial(reserva_id, 'PENDIENTE', 'APROBADA', usuario.get("id"), comentario_hist, conn=conn)
+        except Exception:
+            conn.rollback()
+            raise
         conn.commit()
         return resultado
     except AprobacionError:
@@ -137,6 +144,11 @@ def rechazar_reserva(usuario: dict, reserva_id: int, motivo: Optional[str] = Non
             conn.rollback()
             raise AprobacionError(409, "Transición de estado inválida")
         resultado = aprobacion_repo.rechazar_reserva(reserva_id, usuario.get("id"), motivo, conn=conn)
+        try:
+            hist_repo.registrar_historial(reserva_id, 'PENDIENTE', 'RECHAZADA', usuario.get("id"), str(motivo), conn=conn)
+        except Exception:
+            conn.rollback()
+            raise
         conn.commit()
         return resultado
     except AprobacionError:

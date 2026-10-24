@@ -39,3 +39,19 @@ CREATE INDEX IF NOT EXISTS idx_reservas_espacio ON reservas (espacio_id);
 CREATE INDEX IF NOT EXISTS idx_reservas_usuario ON reservas (usuario_id);
 CREATE INDEX IF NOT EXISTS idx_reservas_estado ON reservas (estado);
 CREATE INDEX IF NOT EXISTS idx_reservas_espacio_tiempo ON reservas (espacio_id, inicio, fin);
+
+CREATE TABLE IF NOT EXISTS HistorialReserva (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reserva_id INTEGER NOT NULL,
+    estado_anterior TEXT,
+    estado_nuevo TEXT NOT NULL,
+    cambiado_por INTEGER NOT NULL,
+    cambiado_en TEXT NOT NULL,
+    comentario TEXT,
+    FOREIGN KEY (reserva_id) REFERENCES reservas(id),
+    FOREIGN KEY (cambiado_por) REFERENCES usuarios(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_historial_reserva ON HistorialReserva (reserva_id);
+CREATE INDEX IF NOT EXISTS idx_historial_cambiado_en ON HistorialReserva (cambiado_en);
+CREATE INDEX IF NOT EXISTS idx_historial_estado_nuevo ON HistorialReserva (estado_nuevo);

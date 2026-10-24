@@ -72,3 +72,8 @@ def require_roles(*roles_permitidos: str):
 
 
 require_admin = require_roles("ADMINISTRADOR")
+
+
+# Alias for compatibility
+obtener_usuario_actual = get_current_user
+

@@ -4,6 +4,7 @@ from src.app.nucleo.conexion import get_connection
 from src.app.espacios import repository as espacios_repo
 from src.app.reservas import repository as reservas_repo
 from src.app.reservas import politicas
+from src.app.historial import repository as hist_repo
 
 
 class SolicitudReservaError(Exception):
@@ -41,6 +42,11 @@ def crear_solicitud_reserva(usuario_id: int, espacio_id: int, inicio_str: str, f
         inicio_utc_str = politicas.formatear_utc_iso8601(inicio_utc)
         fin_utc_str = politicas.formatear_utc_iso8601(fin_utc)
         reserva = reservas_repo.crear_reserva(espacio_id, usuario_id, inicio_utc_str, fin_utc_str, motivo, estado='PENDIENTE', conn=conn)
+        try:
+            hist_repo.registrar_historial(reserva["id"], None, 'PENDIENTE', usuario_id, "Solicitud creada", conn=conn)
+        except Exception:
+            conn.rollback()
+            raise SolicitudReservaError(500, "Error al registrar historial")
         conn.commit()
         # Formatear respuesta
         return {
