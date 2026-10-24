@@ -14,13 +14,17 @@ El sistema SHALL aceptar únicamente los valores ADMINISTRADOR o SOLICITANTE en 
 - **THEN** el sistema rechaza la operación
 
 ### Requirement: Matriz de permisos
-El sistema SHALL aplicar la siguiente matriz de permisos (acción -> roles permitidos):
+El sistema SHALL aplicar la siguiente matriz de permisos:
 
-| Acción | Roles permitidos |
+| Endpoint | Roles permitidos |
 | :-- | :-- |
-| Acceso a endpoints protegidos según los permisos de esta etapa | Solo los roles definidos por los endpoints de esta etapa según su autorización |
+| GET /usuarios/yo | ADMINISTRADOR, SOLICITANTE |
+| GET /usuarios | ADMINISTRADOR |
+| GET /usuarios/{id} | ADMINISTRADOR |
+| PATCH /usuarios/{id}/desactivar | ADMINISTRADOR |
+| PATCH /usuarios/{id}/activar | ADMINISTRADOR |
 
-El sistema SHALL verificar los permisos de cada endpoint en su propia etapa. Los escenarios que prueban endpoints de otras etapas (espacios, reservas, cancelar) no corresponden a esta etapa.
+El sistema SHALL verificar los permisos de cada endpoint en su propia etapa. Los escenarios que prueban endpoints de otras etapas (espacios, reservas, cancelar) no corresponden a esta etapa. Cada etapa posterior verifica los permisos de sus propios endpoints.
 
 ### Requirement: Autenticación obligatoria
 El sistema SHALL requerir que el token se envíe en el encabezado Authorization: Bearer <token>. Si el encabezado falta o tiene formato incorrecto, el sistema SHALL retornar error con código HTTP 401. El sistema SHALL requerir un token JWT válido para acceder a endpoints protegidos.
@@ -68,6 +72,14 @@ Además, el sistema SHALL exponer GET /usuarios/yo, accesible para cualquier usu
 - **WHEN** un usuario autenticado realiza una petición GET /usuarios/yo
 - **THEN** el sistema retorna código HTTP 200 con id, nombre, correo y rol, sin el hash de contraseña
 
+#### Scenario: SOLICITANTE recibe 200 en GET /usuarios/yo
+- **WHEN** un usuario con rol SOLICITANTE realiza una petición GET /usuarios/yo con token válido
+- **THEN** el sistema retorna código HTTP 200 con id, nombre, correo y rol, sin el hash de contraseña
+
+#### Scenario: SOLICITANTE recibe 403 en GET /usuarios
+- **WHEN** un usuario con rol SOLICITANTE realiza una petición GET /usuarios con token válido
+- **THEN** el sistema retorna error con código HTTP 403
+
 #### Scenario: GET /usuarios/yo sin token
 - **WHEN** se realiza una petición GET /usuarios/yo sin token
 - **THEN** el sistema retorna error con código HTTP 401
@@ -78,6 +90,10 @@ Además, el sistema SHALL exponer GET /usuarios/yo, accesible para cualquier usu
 
 #### Scenario: GET /usuarios/yo con usuario inactivo
 - **WHEN** un usuario inactivo realiza una petición GET /usuarios/yo con token válido
+- **THEN** el sistema retorna error con código HTTP 403
+
+#### Scenario: Un usuario desactivado por un administrador recibe 403 al intentar iniciar sesión
+- **WHEN** un usuario desactivado por un administrador intenta iniciar sesión
 - **THEN** el sistema retorna error con código HTTP 403
 
 #### Scenario: GET /usuarios como ADMINISTRADOR
@@ -94,7 +110,11 @@ Además, el sistema SHALL exponer GET /usuarios/yo, accesible para cualquier usu
 
 #### Scenario: GET /usuarios/{id} como ADMINISTRADOR
 - **WHEN** un usuario con rol ADMINISTRADOR realiza una petición GET /usuarios/{id} con un id existente
-- **THEN** el sistema retorna código HTTP 200 con los datos del usuario
+- **THEN** el sistema retorna código HTTP 200 con los datos del usuario, sin el hash de la contraseña
+
+#### Scenario: Ninguna respuesta de administración o GET /usuarios/{id} incluye el hash de la contraseña
+- **WHEN** un usuario con rol ADMINISTRADOR realiza una petición GET /usuarios, GET /usuarios/{id}, PATCH /usuarios/{id}/desactivar o PATCH /usuarios/{id}/activar
+- **THEN** ninguna respuesta incluye el hash de la contraseña
 
 #### Scenario: GET /usuarios/{id} sin token
 - **WHEN** se realiza una petición GET /usuarios/{id} sin token
@@ -146,12 +166,16 @@ Además, el sistema SHALL exponer GET /usuarios/yo, accesible para cualquier usu
 
 #### Scenario: PATCH /usuarios/{id}/activar a sí mismo
 - **WHEN** un usuario con rol ADMINISTRADOR realiza una petición PATCH /usuarios/{id}/activar sobre su propio id
-- **THEN** el sistema retorna código HTTP 200 (o según política; pero solo desactivar a sí mismo está prohibido con 409 - activar a sí mismo no está prohibido)
+- **THEN** el sistema retorna código HTTP 200
+
+#### Scenario: Activar un usuario que ya está activo
+- **WHEN** un usuario con rol ADMINISTRADOR realiza una petición PATCH /usuarios/{id}/activar sobre otro usuario que ya está activo
+- **THEN** el sistema retorna código HTTP 200 sin cambios
 
 ### Requirement: Primer administrador mediante script seed
-El sistema SHALL permitir crear el primer administrador mediante un script de inicialización (seed). El nombre, el correo y la contraseña del primer administrador SHALL salir de las variables de entorno ADMIN_NOMBRE, ADMIN_CORREO y ADMIN_PASSWORD, y nunca SHALL estar escritos en el código. Si el correo ya existe en la base de datos, el script SHALL no crear otro usuario ni SHALL modificar el usuario existente. Si faltan alguna de las variables de entorno requeridas, el script SHALL terminar con un mensaje de error.
+El sistema SHALL permitir crear el primer administrador mediante un script de inicialización (seed). El nombre, el correo y la contraseña del primer administrador SHALL salir de las variables de entorno ADMIN_NOMBRE, ADMIN_CORREO y ADMIN_PASSWORD, y nunca SHALL estar escritos en el código. Si el correo ya existe en la base de datos, el script SHALL NOT crear otro usuario ni SHALL NOT modificar el usuario existente. Si faltan alguna de las variables de entorno requeridas, el script SHALL terminar con un mensaje de error.
 
-#### Scenario: Creación de primer administrador con seed
+#### Scenario: Cuando se ejecuta el script con las tres variables de entorno definidas y el correo no existe
 - **WHEN** se ejecutan las variables de entorno ADMIN_NOMBRE, ADMIN_CORREO y ADMIN_PASSWORD correctamente y el correo no existe
 - **THEN** el sistema crea un usuario con rol ADMINISTRADOR
 

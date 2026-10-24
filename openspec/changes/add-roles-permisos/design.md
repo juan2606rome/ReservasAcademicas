@@ -8,14 +8,15 @@ Ver proposal.md - Why. Esta es la etapa E2 del plan de ingeniería, que depende 
 
 **Objetivos:**
 - Definir roles ADMINISTRADOR y SOLICITANTE
-- Implementar matriz de permisos y aplicar verificación por endpoint
+- Implementar matriz de permisos (GET /usuarios/yo para ambos; GET /usuarios, GET /usuarios/{id}, PATCH /usuarios/{id}/desactivar, PATCH /usuarios/{id}/activar solo para ADMINISTRADOR). Cada etapa posterior verifica los permisos de sus propios endpoints.
 - Crear dependencias para autenticación con JWT desde el encabezado Authorization: Bearer <token>
-- En cada petición protegida, consultar al usuario en la base de datos (no existe → 401, inactivo → 403)
+- En cada petición protegida, consultar al usuario en la base de datos (no existe → 401, inactivo → 403). Un usuario desactivado por un administrador recibe 403 al intentar iniciar sesión.
 - Crear verificadores de autorización por rol
-- Exponer endpoints de administración de usuarios (solo ADMINISTRADOR): GET /usuarios, GET /usuarios/{id}, PATCH /usuarios/{id}/desactivar, PATCH /usuarios/{id}/activar; GET /usuarios/yo accesible a cualquier usuario autenticado (sin hash)
+- Exponer endpoints de administración de usuarios (solo ADMINISTRADOR): GET /usuarios, GET /usuarios/{id}, PATCH /usuarios/{id}/desactivar, PATCH /usuarios/{id}/activar; GET /usuarios/yo accesible a cualquier usuario autenticado (id, nombre, correo, rol, nunca hash). Activar un usuario ya activo responde 200 sin cambios.
 - Impedir que un administrador se desactive a sí mismo (409)
+- Ninguna respuesta de GET /usuarios, GET /usuarios/{id}, PATCH /usuarios/{id}/desactivar o PATCH /usuarios/{id}/activar incluye el hash de la contraseña
 - Manejar errores con códigos HTTP correctos (401, 403, 404, 409)
-- Crear script seed para primer administrador con variables de entorno ADMIN_NOMBRE, ADMIN_CORREO, ADMIN_PASSWORD (sin valores en código), idempotente, con error si faltan variables
+- Crear script seed para primer administrador con variables de entorno ADMIN_NOMBRE, ADMIN_CORREO, ADMIN_PASSWORD (sin valores en código). El script SHALL NOT crear otro usuario ni SHALL NOT modificar el usuario existente si el correo ya existe. Si faltan variables, terminar con mensaje de error.
 
 **No objetivos:**
 - Gestión de roles dinámicos
@@ -51,12 +52,12 @@ Ver proposal.md - Why. Esta es la etapa E2 del plan de ingeniería, que depende 
 - **Alternativas consideradas**: Solo verificación por rol - insuficiente
 
 ### Decisión: Endpoints de administración de usuarios
-- **Elección**: Solo ADMINISTRADOR puede acceder a GET /usuarios, GET /usuarios/{id}, PATCH /usuarios/{id}/desactivar, PATCH /usuarios/{id}/activar. GET /usuarios/yo accesible a cualquier usuario autenticado (devuelve id, nombre, correo, rol; nunca hash). Desactivar a sí mismo → 409. Usuario inexistente → 404.
+- **Elección**: Solo ADMINISTRADOR puede acceder a GET /usuarios, GET /usuarios/{id}, PATCH /usuarios/{id}/desactivar, PATCH /usuarios/{id}/activar. GET /usuarios/yo accesible a cualquier usuario autenticado (devuelve id, nombre, correo, rol; nunca hash). Desactivar a sí mismo → 409. Usuario inexistente → 404. Activar un usuario ya activo responde 200 sin cambios. Ninguna respuesta de GET /usuarios, GET /usuarios/{id}, desactivar o activar incluye el hash de la contraseña.
 - **Justificación**: Requerido explícitamente
 - **Alternativas consideradas**: Permisos más amplios - rechazados por principio de menor privilegio
 
 ### Decisión: Script seed para primer administrador
-- **Elección**: Crear script independiente (seed.py o similar) para inicializar el primer administrador. Nombre/correo/contraseña desde ADMIN_NOMBRE, ADMIN_CORREO, ADMIN_PASSWORD. Si el correo ya existe, no crear ni modificar. Si faltan variables, terminar con mensaje de error.
+- **Elección**: Crear script independiente (seed.py o similar) para inicializar el primer administrador. Nombre/correo/contraseña desde ADMIN_NOMBRE, ADMIN_CORREO, ADMIN_PASSWORD. Si el correo ya existe, el script SHALL NOT crear otro usuario ni SHALL NOT modificar el usuario existente. Si faltan variables, terminar con mensaje de error.
 - **Justificación**: Requerido explícitamente, permite configurar el sistema sin depender de registro público
 - **Alternativas consideradas**: Crear vía endpoint - rechazado por seguridad
 
