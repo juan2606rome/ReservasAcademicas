@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS usuarios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    correo TEXT NOT NULL UNIQUE,
+    hash_contraseña TEXT NOT NULL,
+    rol TEXT NOT NULL,
+    activo INTEGER NOT NULL
+);
