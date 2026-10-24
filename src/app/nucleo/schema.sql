@@ -6,3 +6,13 @@
     rol TEXT NOT NULL CHECK(rol IN ('ADMINISTRADOR', 'SOLICITANTE')),
     activo INTEGER NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS espacios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    tipo TEXT NOT NULL CHECK(tipo IN ('LABORATORIO', 'AUDITORIO', 'SALA_COMPUTO')),
+    capacidad INTEGER NOT NULL CHECK(capacidad > 0),
+    activo INTEGER NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_espacios_nombre_unique ON espacios (LOWER(TRIM(nombre)));
