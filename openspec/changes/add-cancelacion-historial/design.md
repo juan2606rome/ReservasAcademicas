@@ -18,8 +18,8 @@ Ver proposal.md - Why. Esta es la etapa E6 del plan de ingeniería, que depende 
 ## Decisions
 
 ### Decisión: Orden de validaciones en cancelación
-- **Elección**: El orden de validaciones cuando hay varios errores SHALL ser 401, 404, 403, 409
-- **Justificación**: Requerido explícitamente
+- **Elección**: El orden de validaciones en cancelación SHALL ser 401 (sin token), 404 (reserva inexistente), 403 (propiedad/rol), 409 (estado cancelable). El sistema SHALL retornar el primer error según ese orden; si una reserva ajena está RECHAZADA, el error a retornar es 403 (no 409). Si la reserva no existe, el error es 404 (no 403).
+- **Justificación**: Requerido explícitamente para evitar filtrar existencia o estado con validaciones de autorización.
 - **Alternativas consideradas**: Otro orden - no especificado
 
 ### Decisión: Cancelación de reservas
@@ -48,7 +48,7 @@ Ver proposal.md - Why. Esta es la etapa E6 del plan de ingeniería, que depende 
 - **Alternativas consideradas**: Todos ven todo - violaría privacidad
 
 ### Decisión: Filtros de consulta
-- **Elección**: GET /historial soporta filtros opcionales reserva_id, espacio_id, estado (se compara con estado_nuevo), desde y hasta (fechas AAAA-MM-DD en hora de Bogotá, inclusivas, sobre cambiado_en). Valores inválidos retornan 422. Resultados del más reciente al más antiguo.
+- **Elección**: GET /historial soporta filtros opcionales reserva_id, espacio_id, estado (se compara con estado_nuevo), desde y hasta (fechas AAAA-MM-DD en hora de Bogotá, inclusivas, sobre cambiado_en). Los valores de cambiado_en en la respuesta SHALL devolverse en formato ISO 8601 con zona horaria UTC. Valores inválidos retornan 422. Resultados del más reciente al más antiguo.
 - **Justificación**: Requerido explícitamente
 - **Alternativas consideradas**: Sin filtros o con otros filtros - no especificados
 
@@ -59,12 +59,12 @@ Ver proposal.md - Why. Esta es la etapa E6 del plan de ingeniería, que depende 
 
 ## Risks / Trade-offs
 
-- **[Validación] Orden incorrecto** → Mitigación: Implementar validaciones en orden estricto 401, 404, 403, 409
+- **[Validación] Orden incorrecto** → Mitigación: Implementar validaciones en orden estricto 401, 404, 403, 409; asegurar precedencia (reserva ajena RECHAZADA → 403, no 409; reserva inexistente → 404, no 403)
 - **[Transaccionalidad] Historial no registrado o registro falla** → Mitigación: Ejecutar cambio de estado y registro en la misma transacción; revertir si falla el registro
 - **[Permisos] Cancelación no autorizada** → Mitigación: Verificar autenticación primero (401), existencia (404), propiedad/rol (403), estado cancelable (409)
 - **[Estados] Cancelación inválida** → Mitigación: Validar estado, retornar 409
 - **[Trazabilidad] Historial incompleto** → Mitigación: Registrar en todas las transiciones de estado con comentarios por defecto
 - **[Integridad] Historial huérfano** → Mitigación: Foreign key a reservas
 - **[Privacidad] Acceso a historial ajeno** → Mitigación: Filtrar por usuario para solicitantes, incluso con filtros; retornar lista vacía con 200
-- **[Consulta] Filtros inválidos o zona horaria** → Mitigación: Validar valores de filtros, interpretar fechas en hora de Bogotá, inclusivas, filtrar sobre cambiado_en, ordenar del más reciente al más antiguo
+- **[Consulta] Filtros inválidos o zona horaria** → Mitigación: Validar valores de filtros, interpretar fechas en hora de Bogotá, inclusivas, filtrar sobre cambiado_en; devolver cambiado_en en formato ISO 8601 con zona horaria UTC; ordenar del más reciente al más antiguo
 - **[Disponibilidad] Horario liberado** → Mitigación: Al cancelar, liberar espacio (CANCELADA no ocupa)
