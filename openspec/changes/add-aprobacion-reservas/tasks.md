@@ -49,7 +49,9 @@
 - [ ] 5.17 Escribir prueba: "Aprobar reserva inexistente" - verificar retorno 404.
 - [ ] 5.18 Escribir prueba: "Rechazar reserva inexistente" - verificar retorno 404.
 - [ ] 5.19 Escribir prueba: "Aprobar reserva con inicio ya pasado" - verificar retorna 409 y reserva permanece en PENDIENTE sin cambios.
-- [ ] 5.20 Escribir prueba: "Orden de validaciones cuando hay varios errores" - verificar retorno según orden 401, 403, 404, 422, 409.
-- [ ] 5.21 Escribir prueba: "Aprobar mediante endpoint" - POST /reservas/{id}/aprobar sin motivo o con motivo nulo, verificar responde 200 y reserva queda en APROBADA.
-- [ ] 5.22 Escribir prueba: "Rechazar mediante endpoint" - POST /reservas/{id}/rechazar con motivo en el cuerpo, verificar responde 200 y reserva queda en RECHAZADA.
-- [ ] 5.23 Ejecutar toda la suite de pruebas y verificar que todas pasan. Verificar cobertura de todos los escenarios de la especificación.
+- [ ] 5.20 Escribir prueba: "Solicitante intenta aprobar una reserva inexistente" - verificar retorno 403 (no 404).
+- [ ] 5.21 Escribir prueba: "Administrador rechaza una reserva inexistente sin motivo" - verificar retorno 404 (no 422).
+- [ ] 5.22 Escribir prueba: "Administrador rechaza una reserva ya APROBADA sin motivo" - verificar retorno 422 (no 409).
+- [ ] 5.23 Escribir prueba: "Aprobar mediante endpoint" - POST /reservas/{id}/aprobar sin motivo o con motivo nulo, verificar responde 200 y reserva queda en APROBADA.
+- [ ] 5.24 Escribir prueba: "Rechazar mediante endpoint" - POST /reservas/{id}/rechazar con motivo en el cuerpo, verificar responde 200 y reserva queda en RECHAZADA.
+- [ ] 5.25 Ejecutar toda la suite de pruebas y verificar que todas pasan. Verificar cobertura de todos los escenarios de la especificación.

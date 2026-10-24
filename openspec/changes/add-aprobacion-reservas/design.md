@@ -42,7 +42,7 @@ Ver proposal.md - Why. Esta es la etapa E5 del plan de ingeniería, que depende 
 - **Alternativas consideradas**: Registro parcial - insuficiente
 
 ### Decisión: Revalidación al aprobar
-- **Elección**: Al aprobar, volver a verificar que no hay solapamientos con otras reservas PENDIENTE o APROBADA. La revalidación EXCLUYE la propia reserva (si no, siempre chocaría consigo misma). Por la decisión D6 del plan (PENDIENTE ocupa el espacio), un conflicto al aprobar solo puede darse por una inconsistencia de datos: es una validación defensiva. La prueba de ese escenario inserta directamente en la base de datos una reserva solapada.
+- **Elección**: Al aprobar, volver a verificar que no hay solapamientos con otras reservas PENDIENTE o APROBADA. La revalidación EXCLUYE la propia reserva (si no, siempre chocaría consigo misma). Por la decisión D6 del plan (PENDIENTE ocupa el espacio), un conflicto al aprobar solo puede darse por una inconsistencia de datos: es una validación defensiva. Por eso, la prueba de ese escenario inserta directamente en la base de datos una reserva solapada, en lugar de crearla por el flujo normal.
 - **Justificación**: Protección contra condiciones de carrera o cambios entre creación y aprobación
 - **Alternativas consideradas**: Confiar en validación inicial - arriesgado
 
@@ -52,7 +52,7 @@ Ver proposal.md - Why. Esta es la etapa E5 del plan de ingeniería, que depende 
 - **Alternativas consideradas**: Sin transacción - vulnerable
 
 ### Decisión: Orden de validaciones
-- **Elección**: Aplicar validaciones en el siguiente orden: 401, 403, 404, 422, 409
+- **Elección**: Aplicar validaciones en el siguiente orden: 401, 403, 404, 422, 409. El orden se verifica con casos concretos: un solicitante que aprueba una reserva inexistente recibe 403 (no 404); un administrador que rechaza una reserva inexistente sin motivo recibe 404 (no 422); un administrador que rechaza una reserva ya APROBADA sin motivo recibe 422 (no 409). Cada caso tiene su propia prueba.
 - **Justificación**: Definido explícitamente para evitar ambigüedad
 
 ### Decisión: No aprobar si inicio ya pasó

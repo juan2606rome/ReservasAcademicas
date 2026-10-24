@@ -82,7 +82,7 @@ El sistema SHALL registrar quién decidió, cuándo y el motivo de la decisión 
 - **THEN** el sistema registra decidido_por (id del administrador), decidido_en (timestamp) y el motivo proporcionado (no vacío)
 
 ### Requirement: Revalidación al aprobar
-El sistema SHALL volver a validar la disponibilidad al aprobar una reserva para evitar conflictos que puedan haberse generado. La revalidación EXCLUYE la propia reserva (de lo contrario siempre chocaría consigo misma). Por la decisión D6 del plan (PENDIENTE ocupa el espacio), un conflicto al aprobar solo puede darse por una inconsistencia de datos: es una validación defensiva. La prueba de este escenario inserta directamente en la base de datos una reserva solapada.
+El sistema SHALL volver a validar la disponibilidad al aprobar una reserva para evitar conflictos que puedan haberse generado. La revalidación EXCLUYE la propia reserva (de lo contrario siempre chocaría consigo misma). Por la decisión D6 del plan (PENDIENTE ocupa el espacio), un conflicto al aprobar solo puede darse por una inconsistencia de datos: es una validación defensiva.
 
 #### Scenario: Aprobar sin conflictos
 - **GIVEN** una reserva en estado PENDIENTE sin conflictos con otras reservas activas
@@ -91,7 +91,7 @@ El sistema SHALL volver a validar la disponibilidad al aprobar una reserva para 
 - **AND** la reserva queda en estado APROBADA
 
 #### Scenario: Aprobar con conflicto
-- **GIVEN** una reserva en estado PENDIENTE que ahora solapa con otra reserva APROBADA insertada directamente en la base de datos
+- **GIVEN** una reserva en estado PENDIENTE que ahora solapa con otra reserva APROBADA
 - **WHEN** un administrador intenta aprobarla
 - **THEN** el sistema retorna error con código HTTP 409
 - **AND** la reserva permanece en estado PENDIENTE sin cambios
@@ -119,10 +119,20 @@ El sistema SHALL retornar error con código HTTP 409 si se intenta aprobar una r
 ### Requirement: Orden de validaciones
 El sistema SHALL aplicar las validaciones en el siguiente orden: 401, 403, 404, 422, 409.
 
-#### Scenario: Orden de validaciones cuando hay varios errores
-- **GIVEN** una petición con múltiples errores potenciales
-- **WHEN** se evalúan las validaciones
-- **THEN** el sistema retorna el primer error según el orden 401, 403, 404, 422, 409
+#### Scenario: Solicitante intenta aprobar una reserva inexistente
+- **GIVEN** un usuario con rol SOLICITANTE y una reserva con id inexistente
+- **WHEN** el solicitante intenta aprobarla
+- **THEN** el sistema retorna error con código HTTP 403 (no 404)
+
+#### Scenario: Administrador rechaza una reserva inexistente sin motivo
+- **GIVEN** una reserva con id inexistente
+- **WHEN** un administrador intenta rechazarla sin proporcionar motivo
+- **THEN** el sistema retorna error con código HTTP 404 (no 422)
+
+#### Scenario: Administrador rechaza una reserva ya APROBADA sin motivo
+- **GIVEN** existe una reserva en estado APROBADA
+- **WHEN** un administrador intenta rechazarla sin proporcionar motivo
+- **THEN** el sistema retorna error con código HTTP 422 (no 409)
 
 ### Requirement: Endpoints y transacción
 El sistema SHALL exponer los endpoints POST /reservas/{id}/aprobar y POST /reservas/{id}/rechazar (con motivo en el cuerpo). La validación y el cambio de estado ocurren en la misma transacción con BEGIN IMMEDIATE.
