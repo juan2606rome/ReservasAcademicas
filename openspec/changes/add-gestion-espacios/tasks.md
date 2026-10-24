@@ -55,23 +55,24 @@
 - [ ] 5.9 Escribir prueba: "Usuario autenticado consulta espacio" - verificar permitido. Verificar test pasa.
 - [ ] 5.10 Escribir prueba: "Creación con nombre duplicado" - verificar retorno 409 ignorando mayúsculas y espacios al inicio o al final. Verificar test pasa.
 - [ ] 5.11 Escribir prueba: "Edición con nombre duplicado" - verificar retorno 409 ignorando mayúsculas y espacios al inicio o al final. Verificar test pasa.
-- [ ] 5.12 Escribir prueba: "Nombre vacío" - verificar retorno 422 para nombre vacío o solo espacios. Verificar test pasa.
-- [ ] 5.13 Escribir prueba: "Capacidad inválida" - verificar retorno 422 para 0, negativa o no entera. Verificar test pasa.
-- [ ] 5.14 Escribir prueba: "Capacidad válida" - verificar acepta entero mayor que 0. Verificar test pasa.
-- [ ] 5.15 Escribir prueba: "Desactivar espacio" - verificar marcado como inactivo, no eliminado, retorna 200. Verificar test pasa.
-- [ ] 5.16 Escribir prueba: "Activar espacio" - verificar marcado como activo, retorna 200. Verificar test pasa.
-- [ ] 5.17 Escribir prueba: "Desactivar espacio con reservas futuras PENDIENTE o APROBADA" - verificar permite desactivar, no modifica esas reservas, solo impide reservas nuevas. Verificar test pasa.
-- [ ] 5.18 Escribir prueba: "Listar espacios por defecto" - verificar retorna únicamente espacios activos con 200. Verificar test pasa.
-- [ ] 5.19 Escribir prueba: "Listar espacios incluyendo inactivos" - verificar administrador puede usar ?incluir_inactivos=true y recibe todos con 200. Verificar test pasa.
-- [ ] 5.20 Escribir prueba: "Consultar espacio activo" - verificar retorna 200. Verificar test pasa.
-- [ ] 5.21 Escribir prueba: "Consultar espacio inactivo como administrador" - verificar retorna 200. Verificar test pasa.
-- [ ] 5.22 Escribir prueba: "Consultar espacio inactivo como solicitante" - verificar retorna 404. Verificar test pasa.
-- [ ] 5.23 Escribir prueba: "Consultar espacio inexistente" - verificar retorna 404. Verificar test pasa.
-- [ ] 5.24 Escribir prueba: "Editar espacio inexistente" - verificar retorna 404. Verificar test pasa.
-- [ ] 5.25 Escribir prueba: "Desactivar espacio inexistente" - verificar retorna 404. Verificar test pasa.
-- [ ] 5.26 Escribir prueba: "Activar espacio inexistente" - verificar retorna 404. Verificar test pasa.
-- [ ] 5.27 Escribir prueba: "Crear espacio" - verificar retorna 201. Verificar test pasa.
-- [ ] 5.28 Escribir prueba: "Listar espacios" - verificar retorna 200. Verificar test pasa.
-- [ ] 5.29 Escribir prueba: "Consultar espacio" - verificar retorna 200. Verificar test pasa.
-- [ ] 5.30 Escribir prueba: "Editar espacio" - verificar retorna 200. Verificar test pasa.
-- [ ] 5.31 Ejecutar toda la suite de pruebas y verificar que todas pasan. Verificar cobertura de todos los escenarios de la especificación.
+- [ ] 5.12 Escribir prueba: "Edición conservando el propio nombre" - verificar que editar un espacio sin cambiar su nombre, o cambiando solo mayúsculas, retorna 200 y no se trata como duplicado. Verificar test pasa.
+- [ ] 5.13 Escribir prueba: "Nombre vacío" - verificar retorno 422 para nombre vacío o solo espacios. Verificar test pasa.
+- [ ] 5.14 Escribir prueba: "Capacidad inválida" - verificar retorno 422 para 0, negativa o no entera. Verificar test pasa.
+- [ ] 5.15 Escribir prueba: "Capacidad válida" - verificar acepta entero mayor que 0. Verificar test pasa.
+- [ ] 5.16 Escribir prueba: "Desactivar espacio" - verificar marcado como inactivo, no eliminado, retorna 200. Verificar test pasa.
+- [ ] 5.17 Escribir prueba: "Activar espacio" - verificar marcado como activo, retorna 200. Verificar test pasa.
+- [ ] 5.18 Escribir prueba: "Desactivar espacio con reservas futuras PENDIENTE o APROBADA" - verificar permite desactivar, no modifica esas reservas, solo impide reservas nuevas. Verificar test pasa.
+- [ ] 5.19 Escribir prueba: "Listar espacios por defecto" - verificar retorna únicamente espacios activos con 200. Verificar test pasa.
+- [ ] 5.20 Escribir prueba: "Listar espacios incluyendo inactivos" - verificar administrador puede usar ?incluir_inactivos=true y recibe todos con 200. Verificar test pasa.
+- [ ] 5.21 Escribir prueba: "Consultar espacio activo" - verificar retorna 200. Verificar test pasa.
+- [ ] 5.22 Escribir prueba: "Consultar espacio inactivo como administrador" - verificar retorna 200. Verificar test pasa.
+- [ ] 5.23 Escribir prueba: "Consultar espacio inactivo como solicitante" - verificar retorna 404. Verificar test pasa.
+- [ ] 5.24 Escribir prueba: "Consultar espacio inexistente" - verificar retorna 404. Verificar test pasa.
+- [ ] 5.25 Escribir prueba: "Editar espacio inexistente" - verificar retorna 404. Verificar test pasa.
+- [ ] 5.26 Escribir prueba: "Desactivar espacio inexistente" - verificar retorna 404. Verificar test pasa.
+- [ ] 5.27 Escribir prueba: "Activar espacio inexistente" - verificar retorna 404. Verificar test pasa.
+- [ ] 5.28 Escribir prueba: "Crear espacio" - verificar retorna 201. Verificar test pasa.
+- [ ] 5.29 Escribir prueba: "Listar espacios" - verificar retorna 200. Verificar test pasa.
+- [ ] 5.30 Escribir prueba: "Consultar espacio" - verificar retorna 200. Verificar test pasa.
+- [ ] 5.31 Escribir prueba: "Editar espacio" - verificar retorna 200. Verificar test pasa.
+- [ ] 5.32 Ejecutar toda la suite de pruebas y verificar que todas pasan. Verificar cobertura de todos los escenarios de la especificación.

@@ -42,7 +42,7 @@ Ver proposal.md - Why. Esta es la etapa E3 del plan de ingeniería, que depende 
 - **Alternativas consideradas**: Tipos libres - rechazados
 
 ### Decisión: Nombre único
-- **Elección**: Restricción a nivel de aplicación y base de datos considerando nombre normalizado (sin mayúsculas ni espacios al inicio o al final). Error 409 en caso de duplicado. Nombre vacío o solo espacios retorna 422.
+- **Elección**: Restricción a nivel de aplicación y base de datos considerando nombre normalizado (sin mayúsculas ni espacios al inicio o al final). Error 409 en caso de duplicado. Nombre vacío o solo espacios retorna 422. Al editar, el espacio no se compara contra sí mismo: conservar el propio nombre, o cambiar solo mayúsculas o minúsculas, es válido y retorna 200.
 - **Justificación**: Consistente con requerimientos
 - **Alternativas consideradas**: Comparación exacta - rechazada
 

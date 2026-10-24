@@ -49,7 +49,7 @@ El sistema SHALL permitir crear, editar, activar y desactivar espacios únicamen
 - **THEN** el sistema permite la operación
 
 ### Requirement: Nombre único de espacio
-El sistema SHALL garantizar que el nombre de cada espacio sea único sin distinguir mayúsculas ni espacios al inicio o al final. Si se intenta crear o editar un espacio con un nombre ya existente según esta regla, el sistema SHALL retornar error con código HTTP 409.
+El sistema SHALL garantizar que el nombre de cada espacio sea único sin distinguir mayúsculas ni espacios al inicio o al final. Si se intenta crear un espacio, o editar un espacio asignándole el nombre de otro espacio existente según esta regla, el sistema SHALL retornar error con código HTTP 409. Al editar un espacio conservando su propio nombre, incluido un cambio que solo altere mayúsculas o minúsculas, el sistema SHALL aceptar la operación.
 
 #### Scenario: Creación con nombre duplicado
 - **WHEN** un administrador intenta crear un espacio con un nombre que ya existe ignorando mayúsculas y espacios al inicio o al final
@@ -60,6 +60,12 @@ El sistema SHALL garantizar que el nombre de cada espacio sea único sin disting
 - **WHEN** un administrador intenta editar un espacio cambiando su nombre por uno ya existente ignorando mayúsculas y espacios al inicio o al final
 - **THEN** el sistema retorna error con código HTTP 409
 - **AND** no se actualiza el espacio
+
+#### Scenario: Edición conservando el propio nombre
+- **GIVEN** existe un espacio con nombre "Laboratorio A"
+- **WHEN** un administrador edita ese mismo espacio sin cambiar su nombre, o cambiando solo las mayúsculas o minúsculas de ese nombre
+- **THEN** el sistema acepta la operación con código HTTP 200
+- **AND** el espacio no se considera duplicado de sí mismo
 
 #### Scenario: Nombre vacío
 - **WHEN** un administrador intenta crear o editar un espacio con nombre vacío o solo espacios
