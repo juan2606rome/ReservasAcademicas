@@ -26,8 +26,12 @@ CREATE TABLE IF NOT EXISTS reservas (
     motivo TEXT NOT NULL,
     estado TEXT NOT NULL CHECK(estado IN ('PENDIENTE', 'APROBADA', 'RECHAZADA', 'CANCELADA')),
     creada_en TEXT NOT NULL,
+    decidido_por INTEGER,
+    decidido_en TEXT,
+    motivo_decision TEXT,
     FOREIGN KEY (espacio_id) REFERENCES espacios(id),
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+    FOREIGN KEY (decidido_por) REFERENCES usuarios(id),
     CHECK (fin > inicio)
 );
 
