@@ -17,14 +17,21 @@ El sistema SHALL aceptar únicamente los valores ADMINISTRADOR o SOLICITANTE en 
 El sistema SHALL aplicar la siguiente matriz de permisos:
 
 | Endpoint | Roles permitidos |
-| :-- | :-- |
 | GET /usuarios/yo | ADMINISTRADOR, SOLICITANTE |
 | GET /usuarios | ADMINISTRADOR |
 | GET /usuarios/{id} | ADMINISTRADOR |
 | PATCH /usuarios/{id}/desactivar | ADMINISTRADOR |
 | PATCH /usuarios/{id}/activar | ADMINISTRADOR |
 
-El sistema SHALL verificar los permisos de cada endpoint en su propia etapa. Los escenarios que prueban endpoints de otras etapas (espacios, reservas, cancelar) no corresponden a esta etapa. Cada etapa posterior verifica los permisos de sus propios endpoints.
+Cada etapa posterior verifica los permisos de sus propios endpoints.
+
+#### Scenario: SOLICITANTE recibe 200 en GET /usuarios/yo
+- **WHEN** un usuario con rol SOLICITANTE realiza una petición GET /usuarios/yo con token válido
+- **THEN** el sistema retorna código HTTP 200 con id, nombre, correo y rol, sin el hash de contraseña
+
+#### Scenario: SOLICITANTE recibe 403 en GET /usuarios
+- **WHEN** un usuario con rol SOLICITANTE realiza una petición GET /usuarios con token válido
+- **THEN** el sistema retorna error con código HTTP 403
 
 ### Requirement: Autenticación obligatoria
 El sistema SHALL requerir que el token se envíe en el encabezado Authorization: Bearer <token>. Si el encabezado falta o tiene formato incorrecto, el sistema SHALL retornar error con código HTTP 401. El sistema SHALL requerir un token JWT válido para acceder a endpoints protegidos.
@@ -71,14 +78,6 @@ Además, el sistema SHALL exponer GET /usuarios/yo, accesible para cualquier usu
 #### Scenario: GET /usuarios/yo con usuario autenticado
 - **WHEN** un usuario autenticado realiza una petición GET /usuarios/yo
 - **THEN** el sistema retorna código HTTP 200 con id, nombre, correo y rol, sin el hash de contraseña
-
-#### Scenario: SOLICITANTE recibe 200 en GET /usuarios/yo
-- **WHEN** un usuario con rol SOLICITANTE realiza una petición GET /usuarios/yo con token válido
-- **THEN** el sistema retorna código HTTP 200 con id, nombre, correo y rol, sin el hash de contraseña
-
-#### Scenario: SOLICITANTE recibe 403 en GET /usuarios
-- **WHEN** un usuario con rol SOLICITANTE realiza una petición GET /usuarios con token válido
-- **THEN** el sistema retorna error con código HTTP 403
 
 #### Scenario: GET /usuarios/yo sin token
 - **WHEN** se realiza una petición GET /usuarios/yo sin token
@@ -163,10 +162,6 @@ Además, el sistema SHALL exponer GET /usuarios/yo, accesible para cualquier usu
 #### Scenario: PATCH /usuarios/{id}/activar usuario inexistente
 - **WHEN** un usuario con rol ADMINISTRADOR realiza una petición PATCH /usuarios/{id}/activar con un id inexistente
 - **THEN** el sistema retorna error con código HTTP 404
-
-#### Scenario: PATCH /usuarios/{id}/activar a sí mismo
-- **WHEN** un usuario con rol ADMINISTRADOR realiza una petición PATCH /usuarios/{id}/activar sobre su propio id
-- **THEN** el sistema retorna código HTTP 200
 
 #### Scenario: Activar un usuario que ya está activo
 - **WHEN** un usuario con rol ADMINISTRADOR realiza una petición PATCH /usuarios/{id}/activar sobre otro usuario que ya está activo
