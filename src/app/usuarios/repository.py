@@ -47,3 +47,70 @@ def existe_correo(correo: str) -> bool:
         return row is not None
     finally:
         conn.close()
+
+
+def buscar_usuario_por_id(usuario_id: int):
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM usuarios WHERE id = ?", (usuario_id,))
+        row = cursor.fetchone()
+        if row:
+            return dict(row)
+        return None
+    finally:
+        conn.close()
+
+
+def obtener_todos_usuarios():
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, nombre, correo, rol, activo FROM usuarios")
+        rows = cursor.fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
+
+
+def obtener_usuario_por_id(usuario_id: int):
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, nombre, correo, rol, activo FROM usuarios WHERE id = ?", (usuario_id,))
+        row = cursor.fetchone()
+        if row:
+            return dict(row)
+        return None
+    finally:
+        conn.close()
+
+
+def desactivar_usuario(usuario_id: int):
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("UPDATE usuarios SET activo = 0 WHERE id = ?", (usuario_id,))
+        conn.commit()
+        if cursor.rowcount == 0:
+            return None
+        cursor.execute("SELECT id, nombre, correo, rol, activo FROM usuarios WHERE id = ?", (usuario_id,))
+        row = cursor.fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()
+
+
+def activar_usuario(usuario_id: int):
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("UPDATE usuarios SET activo = 1 WHERE id = ?", (usuario_id,))
+        conn.commit()
+        if cursor.rowcount == 0:
+            return None
+        cursor.execute("SELECT id, nombre, correo, rol, activo FROM usuarios WHERE id = ?", (usuario_id,))
+        row = cursor.fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()

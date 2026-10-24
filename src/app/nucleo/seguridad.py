@@ -26,3 +26,14 @@ def generar_token(usuario_id: int, rol: str) -> str:
     }
     token = jwt.encode(payload, secret, algorithm="HS256")
     return token
+
+def decodificar_token(token: str):
+    try:
+        secret = get_jwt_secret()
+        payload = jwt.decode(token, secret, algorithms=["HS256"])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise
+    except Exception:
+        raise
+

@@ -1,34 +1,34 @@
 # Tasks
 
 ## 1. Estructura de autorización
-- [ ] 1.1 Crear módulo autorizacion/ con estructura (router, service, repository, models, schemas, dependencies). Verificar estructura creada.
-- [ ] 1.2 Crear módulo para utilidades de autenticación y autorización. Verificar archivos creados.
+- [x] 1.1 Crear módulo autorizacion/ con estructura (router, service, repository, models, schemas, dependencies). Verificar estructura creada.
+- [x] 1.2 Crear módulo para utilidades de autenticación y autorización. Verificar archivos creados.
 
 ## 2. Autenticación con JWT y verificación de usuario
-- [ ] 2.1 Implementar dependencia para extraer y validar token JWT desde el encabezado Authorization: Bearer <token>. Verificar que rechaza sin token o con formato incorrecto con 401.
-- [ ] 2.2 Implementar validación de token inválido. Verificar retorno 401.
-- [ ] 2.3 Implementar validación de token vencido. Verificar retorno 401.
-- [ ] 2.4 Extraer información del usuario (id, rol) del token.
-- [ ] 2.5 En cada petición protegida, consultar al usuario en la base de datos. Verificar que si no existe retorna 401; si está inactivo retorna 403.
+- [x] 2.1 Implementar dependencia para extraer y validar token JWT desde el encabezado Authorization: Bearer <token>. Verificar que rechaza sin token o con formato incorrecto con 401.
+- [x] 2.2 Implementar validación de token inválido. Verificar retorno 401.
+- [x] 2.3 Implementar validación de token vencido. Verificar retorno 401.
+- [x] 2.4 Extraer información del usuario (id, rol) del token.
+- [x] 2.5 En cada petición protegida, consultar al usuario en la base de datos. Verificar que si no existe retorna 401; si está inactivo retorna 403.
 
 ## 3. Autorización por rol y restricción de valores
-- [ ] 3.1 Crear dependencia para verificar rol ADMINISTRADOR. Verificar que rechaza rol insuficiente con 403.
-- [ ] 3.2 Crear dependencia genérica para verificar roles permitidos. Verificar reutilización.
-- [ ] 3.3 Garantizar que la columna rol solo acepta ADMINISTRADOR o SOLICITANTE. Verificar que intentar guardar otro valor falla.
+- [x] 3.1 Crear dependencia para verificar rol ADMINISTRADOR. Verificar que rechaza rol insuficiente con 403.
+- [x] 3.2 Crear dependencia genérica para verificar roles permitidos. Verificar reutilización.
+- [x] 3.3 Garantizar que la columna rol solo acepta ADMINISTRADOR o SOLICITANTE. Verificar que intentar guardar otro valor falla.
 
 ## 4. Endpoints de administración de usuarios
-- [ ] 4.1 Implementar GET /usuarios/yo (cualquier usuario autenticado). Verificar que devuelve id, nombre, correo y rol, nunca el hash. Verificar escenarios con 200 (ADMINISTRADOR y SOLICITANTE), 401, 403.
-- [ ] 4.2 Implementar GET /usuarios (solo ADMINISTRADOR). Verificar escenarios con 200, 401, 403 (SOLICITANTE recibe 403).
-- [ ] 4.3 Implementar GET /usuarios/{id} (solo ADMINISTRADOR). Verificar que ninguna respuesta incluye hash de contraseña. Verificar escenarios con 200, 401, 403, 404.
-- [ ] 4.4 Implementar PATCH /usuarios/{id}/desactivar (solo ADMINISTRADOR). Verificar que un administrador no puede desactivarse a sí mismo (409). Verificar que ninguna respuesta incluye hash de contraseña. Verificar escenarios con 200, 401, 403, 404, 409.
-- [ ] 4.5 Implementar PATCH /usuarios/{id}/activar (solo ADMINISTRADOR). Activar usuario ya activo responde 200 sin cambios. Verificar que ninguna respuesta incluye hash de contraseña. Verificar escenarios con 200, 401, 403, 404.
+- [x] 4.1 Implementar GET /usuarios/yo (cualquier usuario autenticado). Verificar que devuelve id, nombre, correo y rol, nunca el hash. Verificar escenarios con 200 (ADMINISTRADOR y SOLICITANTE), 401, 403.
+- [x] 4.2 Implementar GET /usuarios (solo ADMINISTRADOR). Verificar escenarios con 200, 401, 403 (SOLICITANTE recibe 403).
+- [x] 4.3 Implementar GET /usuarios/{id} (solo ADMINISTRADOR). Verificar que ninguna respuesta incluye hash de contraseña. Verificar escenarios con 200, 401, 403, 404.
+- [x] 4.4 Implementar PATCH /usuarios/{id}/desactivar (solo ADMINISTRADOR). Verificar que un administrador no puede desactivarse a sí mismo (409). Verificar que ninguna respuesta incluye hash de contraseña. Verificar escenarios con 200, 401, 403, 404, 409.
+- [x] 4.5 Implementar PATCH /usuarios/{id}/activar (solo ADMINISTRADOR). Activar usuario ya activo responde 200 sin cambios. Verificar que ninguna respuesta incluye hash de contraseña. Verificar escenarios con 200, 401, 403, 404.
 
 ## 5. Script seed para primer administrador
-- [ ] 5.1 Crear script de inicialización (seed) para crear primer administrador. Verificar estructura del script.
-- [ ] 5.2 Implementar lógica para obtener nombre, correo y contraseña desde las variables de entorno ADMIN_NOMBRE, ADMIN_CORREO y ADMIN_PASSWORD. Verificar que no están escritos en el código.
-- [ ] 5.3 Implementar lógica para crear usuario con rol ADMINISTRADOR solo si el correo no existe. El script SHALL NOT crear otro usuario ni SHALL NOT modificar el usuario existente si el correo ya existe. Verificar idempotencia.
-- [ ] 5.4 Implementar manejo de errores si faltan alguna de las variables de entorno ADMIN_NOMBRE, ADMIN_CORREO o ADMIN_PASSWORD; el script debe terminar con un mensaje de error. Verificar comportamiento.
-- [ ] 5.5 Documentar uso del script. Verificar documentación presente.
+- [x] 5.1 Crear script de inicialización (seed) para crear primer administrador. Verificar estructura del script.
+- [x] 5.2 Implementar lógica para obtener nombre, correo y contraseña desde las variables de entorno ADMIN_NOMBRE, ADMIN_CORREO y ADMIN_PASSWORD. Verificar que no están escritos en el código.
+- [x] 5.3 Implementar lógica para crear usuario con rol ADMINISTRADOR solo si el correo no existe. El script SHALL NOT crear otro usuario ni SHALL NOT modificar el usuario existente si el correo ya existe. Verificar idempotencia.
+- [x] 5.4 Implementar manejo de errores si faltan alguna de las variables de entorno ADMIN_NOMBRE, ADMIN_CORREO o ADMIN_PASSWORD; el script debe terminar con un mensaje de error. Verificar comportamiento.
+- [x] 5.5 Documentar uso del script. Verificar documentación presente.
 
 ## 6. Pruebas
 - [ ] 6.1 Escribir prueba: "Sin token" (endpoint protegido) - verificar retorno 401. Verificar test pasa.
