@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reservas de espacios académicos</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--tx:#1b1f24;--mu:#667085;--ac:#1a56db;--bd:#dfe2e8;--ok:#0f7b4a;--er:#c0392b;--wa:#b45309}
+@media (prefers-color-scheme:dark){:root{--bg:#15171b;--card:#1f2228;--tx:#eceef1;--mu:#9aa3b2;--ac:#7aa5ff;--bd:#323640;--ok:#4cc38a;--er:#ff7b6b;--wa:#f0b35a;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,"Segoe UI",sans-serif}
+.hide{display:none!important}
+button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:9px 16px;background:var(--ac);color:#fff;transition:.15s}
+button:hover{filter:brightness(1.1);transform:translateY(-1px)}
+button.g{background:var(--mu)}button.r{background:var(--er)}button.o{background:var(--wa)}button.s{padding:4px 10px;font-size:13px;margin:2px}
+input,select{width:100%;padding:9px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+label{display:block;font-size:13px;color:var(--mu);margin:10px 0 3px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:18px}
+/* login */
+#login{max-width:430px;margin:7vh auto;padding:0 16px;animation:up .4s}
+#login h1{text-align:center;font-size:24px;margin:0 0 4px}
+.sub{text-align:center;color:var(--mu);margin:0 0 18px}
+.row{display:flex;gap:8px;margin-top:12px}.row button{flex:1}
+.hint{background:rgba(180,83,9,.12);border-radius:8px;padding:8px 12px;margin-top:14px;font-size:13px}
+/* app */
+header{background:var(--card);border-bottom:1px solid var(--bd);padding:10px 16px;display:flex;gap:10px;align-items:center;position:sticky;top:0;z-index:5}
+header .t{flex:1;font-weight:700}
+.pill{padding:3px 11px;border-radius:99px;font-size:13px;border:1px solid var(--bd)}
+.pill.ok{color:var(--ok)}
+nav{display:flex;gap:6px;padding:14px 16px 0;max-width:1000px;margin:0 auto;flex-wrap:wrap}
+nav button{background:var(--card);color:var(--tx);border:1px solid var(--bd)}
+nav button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+main{max-width:1000px;margin:0 auto;padding:12px 16px 30px}
+.panel{animation:up .3s}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px}
+.wide{grid-column:1/-1}
+.tip{color:var(--mu);margin:0 0 12px}
+h3{margin:0 0 6px;font-size:16px}
+.sc{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border-bottom:1px solid var(--bd);padding:7px 8px;text-align:left}
+tr.new{animation:flash 1.4s}
+.tag{padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700;border:1px solid currentColor}
+.PENDIENTE{color:var(--wa)}.APROBADA,.activo{color:var(--ok)}.RECHAZADA,.CANCELADA,.inactivo{color:var(--er)}
+#toast{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:20}
+.t{padding:10px 16px;border-radius:10px;color:#fff;max-width:340px;animation:up .25s;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.t.ok{background:var(--ok)}.t.er{background:var(--er)}
+details{margin-top:18px}summary{cursor:pointer;color:var(--mu)}
+#log{background:#0f1115;color:#d6dbe3;border-radius:10px;padding:10px 14px;max-height:240px;overflow:auto;font:12.5px/1.45 ui-monospace,Consolas,monospace;margin-top:8px}
+#log .c2{color:#4cc38a}#log .c4{color:#f0b35a}#log .c5,#log .c0{color:#ff7b6b}
+#log pre{margin:2px 0 8px;white-space:pre-wrap;word-break:break-all;color:#9aa3b2}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1}}
+@keyframes flash{from{background:rgba(26,86,219,.25)}to{background:transparent}}
+</style>
+</head>
+<body>
+
+<div id="login">
+<div class="card">
+<h1>📅 Reservas académicas</h1>
+<p class="sub">Entra para reservar espacios</p>
+<label>Correo</label><input id="l-c" placeholder="correo@ejemplo.com" autocomplete="username">
+<label>Contraseña</label><input id="l-p" type="password" placeholder="Contraseña">
+<div class="row"><button id="b-in">Entrar</button><button class="g" id="b-up">Crear cuenta</button></div>
+<label style="margin-top:16px">Nombre (solo para crear cuenta)</label><input id="l-n" placeholder="Tu nombre" autocomplete="off">
+<div class="hint"><b>Cuenta admin:</b> admin@ejemplo.com · <b>Clave:</b> ClaveSegura123</div>
+<div id="srv" class="sub" style="margin:12px 0 0;font-size:13px"></div>
+</div>
+</div>
+
+<div id="app" class="hide">
+<header><span class="t">📅 Reservas</span><span id="ses" class="pill ok"></span><button class="r" id="out">⏻ Salir</button></header>
+<nav id="tabs"></nav>
+<main>
+
+<div class="panel hide" id="p-esp">
+<p class="tip">Los espacios que se pueden reservar. El administrador los crea y activa o desactiva.</p>
+<div class="grid">
+<div class="card" id="crear-esp"><h3>➕ Nuevo espacio</h3>
+<label>Nombre</label><input id="e-n" value="Laboratorio 1">
+<label>Tipo</label><select id="e-t"><option>LABORATORIO</option><option>AUDITORIO</option><option>SALA_COMPUTO</option></select>
+<label>Capacidad</label><input id="e-c" type="number" value="30">
+<div class="row"><button id="b-esp">Crear espacio</button></div></div>
+<div class="card wide"><h3>Espacios</h3><div class="sc" id="t-esp"></div></div>
+</div></div>
+
+<div class="panel hide" id="p-res">
+<p class="tip">Una solicitud nace PENDIENTE. Si choca con otra: 409. Si dura más de 4 horas: 422. La lista se actualiza sola.</p>
+<div class="grid">
+<div class="card"><h3>📝 Pedir una reserva</h3>
+<label>Espacio</label><select id="s-e"></select>
+<label>Fecha</label><input id="s-f" type="date">
+<label>Desde</label><input id="s-i" type="time" value="08:00">
+<label>Hasta</label><input id="s-h" type="time" value="10:00">
+<label>Motivo</label><input id="s-m" value="Clase de redes">
+<div class="row"><button id="b-sol">Solicitar</button><button class="g" id="b-dis">¿Qué hay ocupado?</button></div>
+<p id="dis" class="tip" style="margin-top:10px"></p></div>
+<div class="card wide"><h3>Reservas</h3><div class="sc" id="t-res"></div></div>
+</div></div>
+
+<div class="panel hide" id="p-his">
+<div class="card"><h3>Historial de cambios</h3>
+<div class="row" style="max-width:380px"><input id="h-r" type="number" placeholder="N.º de reserva (opcional)"><button id="b-his">Ver</button></div>
+<div class="sc" id="t-his" style="margin-top:12px"></div></div></div>
+
+<div class="panel hide" id="p-usu">
+<div class="card"><h3>Usuarios</h3><p class="tip">Desactivar a un usuario le quita el acceso al instante.</p><div class="sc" id="t-usu"></div></div></div>
+
+<details><summary>🔍 Ver las llamadas a la API (para explicar qué hace cada puerta)</summary><div id="log"></div></details>
+</main>
+</div>
+<div id="toast"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+let token=null,yo=null,tab='esp',timer=null,prev=new Set();
+try{token=sessionStorage.getItem('tk')}catch(e){}
+const admin=()=>yo&&yo.rol==='ADMINISTRADOR';
+
+async function api(m,p,body){
+  const h={};if(body)h['Content-Type']='application/json';if(token)h['Authorization']='Bearer '+token;
+  let st,data;
+  try{const r=await fetch('/api'+p,{method:m,headers:h,body:body?JSON.stringify(body):undefined});st=r.status;const t=await r.text();try{data=JSON.parse(t)}catch(e){data=t}}
+  catch(e){st=0;data={detail:'No hay conexión con el servidor de la interfaz (¿está abierto demo.bat?)'}}
+  const b=body?{...body}:null;if(b&&b['contraseña'])b['contraseña']='***';
+  $('log').insertAdjacentHTML('afterbegin',`<div><span class="c${String(st)[0]}">${st}</span> ${m} ${p}</div><pre>${b?esc(JSON.stringify(b))+' → ':''}${esc(JSON.stringify(data)).slice(0,400)}</pre>`);
+  return {st,data};
+}
+function det(d){const x=d&&d.detail!==undefined?d.detail:d;if(Array.isArray(x))return x.map(e=>(e.loc||[]).slice(1).join('.')+': '+e.msg).join('; ');return typeof x==='string'?x:JSON.stringify(x)}
+function toast(t,ok){const e=document.createElement('div');e.className='t '+(ok?'ok':'er');e.textContent=t;$('toast').appendChild(e);setTimeout(()=>e.remove(),4500)}
+function res(r,okTxt){if(r.st>=200&&r.st<300){toast('✔ '+okTxt,true);return true}toast(r.st+' · '+det(r.data),false);return false}
+const fh=i=>{try{return new Date(i).toLocaleString('es-CO',{timeZone:'America/Bogota',dateStyle:'short',timeStyle:'short'})}catch(e){return i}};
+
+/* sesión */
+async function entrar(c,p){
+  const r=await api('POST','/usuarios/login',{correo:c,'contraseña':p});
+  if(r.st!==200){toast(r.st===0?det(r.data):'Correo o contraseña incorrectos ('+r.st+')',false);return}
+  token=r.data.access_token;try{sessionStorage.setItem('tk',token)}catch(e){}
+  await iniciar();
+}
+async function crear(n,c,p){const r=await api('POST','/usuarios/registro',{nombre:n,correo:c,'contraseña':p});return r}
+$('b-in').onclick=()=>entrar($('l-c').value,$('l-p').value);
+$('b-up').onclick=async()=>{const r=await crear($('l-n').value||'Usuario',$('l-c').value,$('l-p').value);if(res(r,'Cuenta creada. Entrando…'))entrar($('l-c').value,$('l-p').value)};
+$('out').onclick=()=>{token=null;yo=null;try{sessionStorage.removeItem('tk')}catch(e){}clearInterval(timer);$('app').classList.add('hide');$('login').classList.remove('hide');toast('Sesión cerrada',true)};
+[$('l-c'),$('l-p')].forEach(i=>i.onkeydown=e=>{if(e.key==='Enter')$('b-in').click()});
+
+async function iniciar(){
+  const r=token?await api('GET','/usuarios/yo'):{st:0};
+  if(r.st!==200){token=null;$('login').classList.remove('hide');$('app').classList.add('hide');return}
+  yo=r.data;$('ses').textContent=`${yo.nombre} · ${yo.rol}`;
+  $('login').classList.add('hide');$('app').classList.remove('hide');
+  $('crear-esp').classList.toggle('hide',!admin());
+  const T=[['esp','🏢 Espacios'],['res','📅 Reservas'],['his','🕘 Historial']];if(admin())T.push(['usu','👥 Usuarios']);
+  $('tabs').innerHTML=T.map(t=>`<button data-t="${t[0]}">${t[1]}</button>`).join('');
+  ir('esp');clearInterval(timer);timer=setInterval(()=>{if(tab==='res')cargarRes(true);if(tab==='esp')cargarEsp()},6000);
+}
+$('tabs').onclick=e=>{if(e.target.dataset.t)ir(e.target.dataset.t)};
+function ir(t){tab=t;
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('hide',p.id!=='p-'+t));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  if(t==='esp')cargarEsp();if(t==='res'){cargarSel();cargarRes()}if(t==='his')verHis();if(t==='usu')cargarUsu()}
+
+/* espacios */
+async function cargarEsp(){
+  const r=await api('GET','/espacios'+(admin()?'?incluir_inactivos=true':''));
+  if(r.st!==200){$('t-esp').textContent=det(r.data);return}
+  $('t-esp').innerHTML='<table><tr><th>ID</th><th>Nombre</th><th>Tipo</th><th>Cap.</th><th>Estado</th><th></th></tr>'+r.data.map(e=>`<tr><td>${e.id}</td><td>${esc(e.nombre)}</td><td>${e.tipo}</td><td>${e.capacidad}</td><td><span class="tag ${e.activo?'activo':'inactivo'}">${e.activo?'activo':'inactivo'}</span></td><td>${admin()?`<button class="s g" data-e="${e.id}" data-a="${e.activo?'desactivar':'activar'}">${e.activo?'Desactivar':'Activar'}</button>`:''}</td></tr>`).join('')+'</table>'}
+$('t-esp').onclick=async e=>{if(!e.target.dataset.e)return;const r=await api('PATCH',`/espacios/${e.target.dataset.e}/${e.target.dataset.a}`);res(r,'Espacio actualizado');cargarEsp()};
+$('b-esp').onclick=async()=>{const r=await api('POST','/espacios',{nombre:$('e-n').value,tipo:$('e-t').value,capacidad:+$('e-c').value});if(res(r,'Espacio creado'))cargarEsp()};
+
+/* reservas */
+const d2=new Date();d2.setDate(d2.getDate()+2);$('s-f').value=d2.toISOString().slice(0,10);
+const iso=(f,h)=>`${f}T${h}:00-05:00`;
+async function cargarSel(){const r=await api('GET','/espacios');if(r.st===200)$('s-e').innerHTML=r.data.filter(e=>e.activo).map(e=>`<option value="${e.id}">${esc(e.nombre)}</option>`).join('')||'<option value="">(crea un espacio primero)</option>'}
+$('b-sol').onclick=async()=>{const r=await api('POST','/reservas/solicitudes',{espacio_id:+$('s-e').value,inicio:iso($('s-f').value,$('s-i').value),fin:iso($('s-f').value,$('s-h').value),motivo:$('s-m').value});if(res(r,'Solicitud creada (PENDIENTE)'))cargarRes()};
+$('b-dis').onclick=async()=>{const r=await api('GET',`/reservas/disponibilidad?espacio_id=${$('s-e').value}&fecha=${$('s-f').value}`);$('dis').textContent=r.st!==200?det(r.data):(r.data.length?'Ocupado: '+r.data.map(f=>`${fh(f.inicio)} a ${fh(f.fin)} (${f.estado})`).join('; '):'✔ Todo el día libre')};
+async function cargarRes(quiet){
+  const r=await api('GET','/reservas');if(r.st!==200){$('t-res').textContent=det(r.data);return}
+  const ids=new Set(r.data.map(x=>x.id));
+  $('t-res').innerHTML=(r.data.length?'<table><tr><th>ID</th><th>Esp.</th><th>Usuario</th><th>Inicio</th><th>Fin</th><th>Estado</th><th>Motivo</th><th></th></tr>':'<p class="tip">Aún no hay reservas.</p>')+r.data.map(x=>{
+    let a='';
+    if(admin()&&x.estado==='PENDIENTE')a+=`<button class="s" data-a="aprobar" data-id="${x.id}">Aprobar</button><button class="s r" data-a="rechazar" data-id="${x.id}">Rechazar</button>`;
+    if(x.estado==='PENDIENTE'||x.estado==='APROBADA')a+=`<button class="s g" data-a="cancelar" data-id="${x.id}">Cancelar</button>`;
+    return `<tr class="${prev.size&&!prev.has(x.id)?'new':''}"><td>${x.id}</td><td>${x.espacio_id}</td><td>${x.usuario_id}</td><td>${fh(x.inicio)}</td><td>${fh(x.fin)}</td><td><span class="tag ${x.estado}">${x.estado}</span></td><td>${esc(x.motivo)}</td><td>${a}</td></tr>`}).join('')+(r.data.length?'</table>':'');
+  prev=ids}
+$('t-res').onclick=async e=>{
+  const a=e.target.dataset.a,id=e.target.dataset.id;if(!a)return;let body;
+  if(a==='rechazar'){const m=prompt('Motivo del rechazo (obligatorio):');if(!m)return;body={motivo:m}}
+  if(a==='cancelar'){const m=prompt('Motivo de la cancelación (opcional):');body=m?{motivo:m}:{}}
+  const r=await api('POST',`/reservas/${id}/${a}`,body);res(r,'Reserva '+a.replace(/r$/,'da').replace('aprobada','aprobada'));cargarRes()};
+
+/* historial */
+async function verHis(){
+  const id=$('h-r').value;const r=await api('GET','/historial'+(id?'?reserva_id='+id:''));
+  const L=Array.isArray(r.data)?r.data:(r.data&&r.data.historial)||null;
+  if(r.st!==200||!L){$('t-his').textContent=det(r.data);return}
+  if(!L.length){$('t-his').innerHTML='<p class="tip">Sin registros todavía.</p>';return}
+  const ks=Object.keys(L[0]);
+  $('t-his').innerHTML='<table><tr>'+ks.map(k=>`<th>${k}</th>`).join('')+'</tr>'+L.map(x=>'<tr>'+ks.map(k=>`<td>${esc(x[k]??'')}</td>`).join('')+'</tr>').join('')+'</table>'}
+$('b-his').onclick=verHis;
+
+/* usuarios */
+async function cargarUsu(){
+  const r=await api('GET','/usuarios');if(r.st!==200){$('t-usu').textContent=det(r.data);return}
+  $('t-usu').innerHTML='<table><tr><th>ID</th><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th><th></th></tr>'+r.data.map(u=>`<tr><td>${u.id}</td><td>${esc(u.nombre)}</td><td>${esc(u.correo)}</td><td>${u.rol}</td><td><span class="tag ${u.activo?'activo':'inactivo'}">${u.activo?'activo':'inactivo'}</span></td><td><button class="s g" data-u="${u.id}" data-a="${u.activo?'desactivar':'activar'}">${u.activo?'Desactivar':'Activar'}</button></td></tr>`).join('')+'</table>'}
+$('t-usu').onclick=async e=>{if(!e.target.dataset.u)return;const r=await api('PATCH',`/usuarios/${e.target.dataset.u}/${e.target.dataset.a}`);res(r,'Usuario actualizado');cargarUsu()};
+
+/* arranque */
+(async()=>{
+  const r=await api('GET','/');
+  $('srv').textContent=r.st===200?'🟢 API conectada':'🔴 La API está apagada: inicia iniciar.bat';
+  iniciar();
+})();
+</script>
+</body>
+</html>
