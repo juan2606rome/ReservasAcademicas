@@ -33,13 +33,13 @@
 - [ ] 4.11 Implementar consulta de reserva por id GET /reservas/{id} (dueño o administrador; ajena siendo solicitante 403; inexistente 404).
 
 ## 5. Capa de API (reservas)
-- [ ] 5.1 Crear reservas/schemas.py con esquemas de petición y respuesta. Verificar validaciones (inicio/fin con zona horaria, motivo, etc.).
+- [ ] 5.1 Crear reservas/schemas.py con esquemas de petición y respuesta. Verificar validaciones (inicio/fin con zona horaria, motivo, etc.). Asegurar que las respuestas serialicen inicio/fin en formato ISO 8601 con zona horaria UTC.
 - [ ] 5.2 Crear reservas/router.py con endpoints para crear solicitud, consultar disponibilidad, listar reservas y obtener reserva por id. Verificar rutas.
 - [ ] 5.3 Proteger endpoints con autenticación (cualquier usuario autenticado puede crear solicitud y consultar disponibilidad). Verificar autorización.
-- [ ] 5.4 Implementar POST /reservas/solicitudes retornando 201 con id, espacio_id, usuario_id, inicio, fin, motivo y estado=PENDIENTE en caso exitoso; con códigos HTTP correctos según validaciones.
-- [ ] 5.5 Implementar GET /reservas/disponibilidad con parámetros espacio_id y fecha. Verificar funcionalidad.
-- [ ] 5.6 Implementar GET /reservas con filtros opcionales estado y espacio_id. Verificar filtrado por rol.
-- [ ] 5.7 Implementar GET /reservas/{id}. Verificar permisos (403 si ajena, 404 si inexistente).
+- [ ] 5.4 Implementar POST /reservas/solicitudes retornando 201 con id, espacio_id, usuario_id, inicio, fin, motivo y estado=PENDIENTE en caso exitoso; inicio/fin en formato ISO 8601 con zona horaria UTC. Con códigos HTTP correctos según validaciones.
+- [ ] 5.5 Implementar GET /reservas/disponibilidad con parámetros espacio_id y fecha. Verificar funcionalidad. Retornar franjas con inicio/fin en formato ISO 8601 con zona horaria UTC.
+- [ ] 5.6 Implementar GET /reservas con filtros opcionales estado y espacio_id. Verificar filtrado por rol. Validar filtros inválidos (estado no válido o espacio_id no numérico) retornando 422. Retornar inicio/fin en formato ISO 8601 con zona horaria UTC.
+- [ ] 5.7 Implementar GET /reservas/{id}. Verificar permisos (403 si ajena, 404 si inexistente). Retornar inicio/fin en formato ISO 8601 con zona horaria UTC.
 - [ ] 5.8 Registrar router en aplicación principal. Verificar endpoints accesibles.
 
 ## 6. Pruebas
@@ -61,17 +61,22 @@
 - [ ] 6.16 Prueba: "Mismo horario en otro espacio es permitido" - verificar creación exitosa en ambos espacios. Usar fechas futuras. Verificar test pasa.
 - [ ] 6.17 Prueba: "Una solicitud PENDIENTE contra otra PENDIENTE se solapa" - verificar retorno 409. Usar fechas futuras. Verificar test pasa.
 - [ ] 6.18 Prueba: "Dos solicitudes simultáneas" - verificar solo una exitosa, otra con 409. Usar fechas futuras. Verificar test pasa.
-- [ ] 6.19 Prueba: "Consultar disponibilidad con franjas ocupadas" - GET /reservas/disponibilidad, ordenadas por inicio, cada una con inicio, fin y estado, sin datos de usuarios. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.19 Prueba: "Consultar disponibilidad con franjas ocupadas" - GET /reservas/disponibilidad, ordenadas por inicio, cada una con inicio, fin y estado, sin datos de usuarios; inicio/fin en formato ISO 8601 con zona horaria UTC. Usar fechas futuras. Verificar test pasa.
 - [ ] 6.20 Prueba: "Sin reservas devuelve lista vacía" - GET /reservas/disponibilidad retorna lista vacía con 200. Usar fechas futuras. Verificar test pasa.
 - [ ] 6.21 Prueba: "Espacio inexistente en consulta de disponibilidad" - verificar retorno 404. Verificar test pasa.
 - [ ] 6.22 Prueba: "Fecha inválida o faltante en consulta de disponibilidad" - verificar retorno 422. Verificar test pasa.
-- [ ] 6.23 Prueba: "Solicitante ve solo sus reservas" - GET /reservas, más recientes primero. Usar fechas futuras. Verificar test pasa.
-- [ ] 6.24 Prueba: "Administrador ve todas las reservas" - GET /reservas. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.23 Prueba: "Solicitante ve solo sus reservas" - GET /reservas, más recientes primero; inicio/fin en ISO 8601 UTC. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.24 Prueba: "Administrador ve todas las reservas" - GET /reservas; inicio/fin en ISO 8601 UTC. Usar fechas futuras. Verificar test pasa.
 - [ ] 6.25 Prueba: "Filtrar reservas por estado" - GET /reservas?estado=PENDIENTE. Usar fechas futuras. Verificar test pasa.
 - [ ] 6.26 Prueba: "Filtrar reservas por espacio_id" - GET /reservas?espacio_id=.... Usar fechas futuras. Verificar test pasa.
-- [ ] 6.27 Prueba: "Consultar reserva propia por id" - GET /reservas/{id}. Usar fechas futuras. Verificar test pasa.
-- [ ] 6.28 Prueba: "Administrador consulta cualquier reserva por id" - GET /reservas/{id}. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.27 Prueba: "Consultar reserva propia por id" - GET /reservas/{id}; inicio/fin en ISO 8601 UTC. Usar fechas futuras. Verificar test pasa.
+- [ ] 6.28 Prueba: "Administrador consulta cualquier reserva por id" - GET /reservas/{id}; inicio/fin en ISO 8601 UTC. Usar fechas futuras. Verificar test pasa.
 - [ ] 6.29 Prueba: "Solicitante consulta reserva ajena" - GET /reservas/{id} retorna 403. Usar fechas futuras. Verificar test pasa.
 - [ ] 6.30 Prueba: "Consultar reserva inexistente" - GET /reservas/{id} retorna 404. Verificar test pasa.
 - [ ] 6.31 Prueba: "Orden de validaciones cuando hay varios errores" - 401, 422, 404, 409. Usar fechas futuras. Verificar test pasa.
-- [ ] 6.32 Ejecutar toda la suite de pruebas y verificar que todas pasan. Verificar cobertura de todos los escenarios de la especificación.
+- [ ] 6.32 Prueba: "Filtros inválidos de GET /reservas" - estado distinto de PENDIENTE, APROBADA, RECHAZADA o CANCELADA o espacio_id no numérico -> 422. Verificar test pasa.
+- [ ] 6.33 Prueba: "Petición sin token y con datos inválidos" - retornar 401 (no 422). Verificar test pasa.
+- [ ] 6.34 Prueba: "Petición con fechas inválidas y espacio_id inexistente" - retornar 422 (no 404). Verificar test pasa.
+- [ ] 6.35 Prueba: "Petición válida sobre espacio inexistente" - retornar 404. Verificar test pasa.
+- [ ] 6.36 Prueba: "Petición válida sobre espacio inactivo que además se solaparía" - retornar 409. Verificar test pasa.
+- [ ] 6.37 Ejecutar toda la suite de pruebas y verificar que todas pasan. Verificar cobertura de todos los escenarios de la especificación.

@@ -10,16 +10,16 @@ Ver proposal.md - Why. Esta es la etapa E4 del plan de ingeniería, que depende 
 - Crear solicitudes en estado PENDIENTE
 - El usuario de la solicitud sale del token, nunca del cuerpo de la petición (si el cuerpo trae un usuario, se ignora)
 - Validar fechas, horarios y espacio
-- Los campos inicio y fin llegan en formato ISO 8601 con zona horaria; si no traen zona horaria, retornar 422. Internamente se guardan en UTC
+- Los campos inicio y fin llegan en formato ISO 8601 con zona horaria; si no traen zona horaria, retornar 422. Internamente se guardan en UTC. Las fechas inicio y fin se devuelven en formato ISO 8601 con zona horaria UTC en la creación, en la disponibilidad y en la consulta de reservas
 - La regla "mismo día" y la consulta de disponibilidad por fecha se evalúan en hora de Bogotá (America/Bogota, UTC-5)
 - Validar motivo obligatorio, no vacío y de máximo 500 caracteres
 - Implementar prevención de solapamientos con intervalos [inicio, fin)
 - El solapamiento se compara solo con reservas del MISMO espacio
 - Usar transacción BEGIN IMMEDIATE para atomicidad
 - Implementar consulta de disponibilidad
-- Implementar consulta de reservas (GET /reservas, GET /reservas/{id}) con control por rol
+- Implementar consulta de reservas (GET /reservas, GET /reservas/{id}) con control por rol; filtros inválidos (estado no válido o espacio_id no numérico) retornan 422
 - Manejar reservas simultáneas correctamente
-- Orden de validaciones: 401, 422, 404, 409
+- Orden de validaciones: 401, 422, 404, 409 (aplicar en ese orden cuando hay múltiples errores)
 
 **No objetivos:**
 - Aprobación/rechazo (etapa E5)
@@ -55,7 +55,7 @@ Ver proposal.md - Why. Esta es la etapa E4 del plan de ingeniería, que depende 
 - **Alternativas consideradas**: Permitir reservas pasadas - poco práctico
 
 ### Decisión: Zona horaria
-- **Elección**: Los campos inicio y fin llegan en formato ISO 8601 con zona horaria; si no traen zona horaria, retornar 422. Internamente se guardan en UTC. "Mismo día" y disponibilidad se evalúan en hora de Bogotá (America/Bogota, UTC-5)
+- **Elección**: Los campos inicio y fin llegan en formato ISO 8601 con zona horaria; si no traen zona horaria, retornar 422. Internamente se guardan en UTC. "Mismo día" y disponibilidad se evalúan en hora de Bogotá (America/Bogota, UTC-5). Las fechas inicio y fin se devuelven en formato ISO 8601 con zona horaria UTC en la creación, en la disponibilidad y en la consulta de reservas
 - **Justificación**: Requerido explícitamente
 - **Alternativas consideradas**: Asumir zona horaria - rechazado
 
@@ -80,17 +80,17 @@ Ver proposal.md - Why. Esta es la etapa E4 del plan de ingeniería, que depende 
 - **Alternativas consideradas**: Otras fórmulas - incorrectas para este caso; solapamiento entre espacios - rechazado
 
 ### Decisión: Consulta de disponibilidad
-- **Elección**: GET /reservas/disponibilidad?espacio_id=...&fecha=AAAA-MM-DD para cualquier usuario autenticado. Fecha evaluada en hora de Bogotá. Devuelve franjas ocupadas ordenadas por inicio, cada una con inicio, fin y estado, sin datos de usuarios. Sin reservas: lista vacía 200. Espacio inexistente: 404. Fecha inválida o faltante: 422
+- **Elección**: GET /reservas/disponibilidad?espacio_id=...&fecha=AAAA-MM-DD para cualquier usuario autenticado. Fecha evaluada en hora de Bogotá. Devuelve franjas ocupadas ordenadas por inicio, cada una con inicio, fin y estado, sin datos de usuarios. Inicio y fin en formato ISO 8601 con zona horaria UTC. Sin reservas: lista vacía 200. Espacio inexistente: 404. Fecha inválida o faltante: 422
 - **Justificación**: Requerido explícitamente
 - **Alternativas consideradas**: Solo validación al crear - insuficiente
 
 ### Decisión: Consulta de reservas
-- **Elección**: GET /reservas (solicitante ve solo las suyas, administrador todas; filtros opcionales estado y espacio_id; más recientes primero) y GET /reservas/{id} (dueño o administrador; ajena siendo solicitante: 403; inexistente: 404)
+- **Elección**: GET /reservas (solicitante ve solo las suyas, administrador todas; filtros opcionales estado y espacio_id; más recientes primero; filtros inválidos estado no válido o espacio_id no numérico: 422; inicio/fin en UTC ISO 8601) y GET /reservas/{id} (dueño o administrador; ajena siendo solicitante: 403; inexistente: 404; inicio/fin en UTC ISO 8601)
 - **Justificación**: Requerido explícitamente
 - **Alternativas consideradas**: Sin listado - insuficiente
 
 ### Decisión: Orden de validaciones
-- **Elección**: Cuando hay varios errores, el orden es 401, 422, 404, 409
+- **Elección**: Cuando hay varios errores, el orden es 401, 422, 404, 409. Casos: sin token+datos inválidos -> 401; fechas inválidas + espacio_id inexistente -> 422; petición válida sobre espacio inexistente -> 404; petición válida sobre espacio inactivo que además se solaparía -> 409
 - **Justificación**: Requerido explícitamente
 - **Alternativas consideradas**: Otro orden - rechazado
 
